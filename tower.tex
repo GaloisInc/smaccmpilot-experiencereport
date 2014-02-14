@@ -2,8 +2,55 @@
 
 \begin{itemize}
 \item motivated by the ``glue code'' problem
+	\begin{itemize}
+		\item resource constrained systems have only very low level OS
+			primitives
+		\item using these ipc primitives is tricky and dangerous
+		\item they're also not very expressive, so common patterns are
+			bulky - require lots of moving parts to express
+		\item rather than depend on a runtime library or expanded OS to
+			solve these problems, code generation
+	\end{itemize}
 \item also generate architecture models
+	\begin{itemize}
+		\item various languages to describe component systems, we're
+			using AADL to interact with other team members on this
+			project
+		\item we already have a component system described in the tower
+			macro language, so its a simple matter to transliterate
+			it into another system
+		\item architecture model is sufficiently detailed to generate
+			operating system host code for tower tasks, as an
+			alternative to tower's own generated os host code
+	\end{itemize}
 \item programming feels like plumbing
-\item device drivers easy
+	\begin{itemize}
+		\item tasks communicate through bounded channels
+			Control.Concurren.Chan
+		\item XXX what is prior art for this kind of programming?
+			what is the most concise way to describe tower's comm
+			primitives?
+		\item static graph of components - all communication is known at
+			compile time. so really the api can look a lot like a
+			graph - there are nodes (tasks) and edges (channels).
+	\end{itemize}
+\item system building tool
+	\begin{itemize}
+		\item since tower is built on top of the ivory language, you can
+			build portions of systems by calling out to external c
+			code.
+		\item its also feasible to build complete embedded systems
+			images from 100\% tower
+		\item tower can be used to write device drivers - knows about
+			ISRs, scheduling priority, and we can write against the
+			memory mapped IO peripheral registers from Ivory
+	\end{itemize}
 \item porting between OSes easy
+	\begin{itemize}
+		\item since os primitives are only used by generated code, we
+			can just implement multiple code generators to
+			implement for multiple os's
+		\item currently, tower supports a backend for FreeRTOS and the
+			eChronos RTOS made by NICTA.
+	\end{itemize}
 \end{itemize}

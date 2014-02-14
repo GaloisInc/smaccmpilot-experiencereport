@@ -1,3 +1,46 @@
 \section{SMACCMPilot: a High-Assurance Autopilot}
 
-\todo{Give the some sense of the size/complexity of SMACCMPilot.}
+\begin{itemize}
+	\item what is smaccmpilot?
+		\begin{itemize}
+			\item flight control software for small quadcopters
+			\item bare metal on a microcontroller based board
+			\item responsible for reading sensors, computing control
+				outputs, and writing outputs to motor
+				controllers in real time, at 200hz
+			\item encrypted link for command, control, and telemetry
+		\end{itemize}
+	\item size/complexity of system
+		\begin{itemize}
+			\item tower complexity
+				\begin{itemize}
+					\item tasks
+					\item channels
+					\item in many cases, we use more tasks
+						than are strictly required,
+						mostly because individual event
+						loops \& channels are a nice
+						method of building abstractions
+				\end{itemize}
+			\item haskell loc: 10kloc application code, 3kloc bsp,
+				10kloc generated from MAVLink message schema (an
+				IDL with standard binary representation)
+			\item c loc: generates 48kloc, depend on external
+				libraries for another 10kloc, + os
+			\item comparison to existing systems
+				\begin{itemize}
+					\item apm project
+						60kloc code, supports multiple
+						platforms
+					\item px4 project
+						25kloc application code
+						25kloc support code, + big os
+					\item these support a higher amount of
+						autonomy than smaccmpilot, but
+						the basics - IO, sensor fusion,
+						flight stabilizer, telemetry,
+						command \& control, make up the
+						majority of the code.
+				\end{itemize}
+		\end{itemize}
+\end{itemize}
