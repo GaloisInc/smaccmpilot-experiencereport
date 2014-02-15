@@ -1,5 +1,106 @@
 \section{Ivory: Safe C Programming}
 
+At face value: our approach sounds audacious if not simply ludicrous: faced with
+developing new autopilot software in one-and-a-half years, start by designing a
+new programming language and compiler from the ground up.
+
+Of course, developing an EDSL is not the same as developing a stand-alone
+compiler.  Much of the typical compiler tool-chain, like the front-end
+parser/lexer, is obviated.
+
+Furthermore, we were confident that time ``lost'' in writing the EDSL would be
+made up by developing in Haskell.
+
+The goal of Ivory is to ensure the programmer writes safe embedded C code.  In
+that regard, Ivory shares the goal of other ``safe-C'' programming languages.
+Notable related work includes \todo{Cyclone, Iavor's stuff, etc.}.  From a
+practical standpoint, most of these languages have bit-rotted, but our main
+motivation for not using them is that our desire for a Turing-complete,
+type-safe macro-language to improve our productivity.
+
+There have also been ``safe-C'' EDSL efforts.  Notable examples include
+\todo{Atom, Copilot, FeldSpar}.  \todo{However, languages also have some
+  drawbacks.}
+
+The essential contributions of Ivory from a programming language perspective are
+its expressiveness and our approach to type-safety.
+
+\paragraph{Expressiveness}
+Regarding the former, Ivory has a number of features:
+
+\begin{itemize}
+  \item Memory-areas: stack-based allocation of memory areas~\cite{}.
+  \item Product types: C structs and well-typed getters.
+  \item FFI: typed interfaces for calling arbitrary C code.
+  \item Module system: managing dependencies to support C-level headers and
+    includes.
+  \item Bit-fields: support for typed manipulation of bit-fields and registers~\cite{}.
+\end{itemize}
+
+As well, Ivory has some limitations.  Ivory does not support heap-based dynamic
+memory allocation (but global variables can be defined).  C arrays are
+fixed-length.  There is no pointer arithmetic.  Pointers are non-nullable.
+Union types are not supported.  Unsafe casts are not supported: casts must to a
+strictly more expressive type (e.g., from an unsigned 8-bit integer to an
+unsigned 16-bit integer) or a default value must be provided that is returned
+for casts otherwise.  In particular, no void-type exists.
+
+In Ivory, these have not been limiting factors, particularly because of the
+power of using Haskell as a macro system.  For example, while arrays must be of
+fixed size, we can define a single \emph{Haskell} function that is polymorphic
+in the array size that becomes instantiated at a particular size at each use
+site.  For example, consider the following code:
+
+\todo{array example}
+
+\paragraph{Type-level properties}
+Ivory's domain-specific type checking focuses essentially on guaranteeing memory
+safety and helping the programmer reason about her programs nonfunctional
+behaviors more easily.  With respect to memory safety, the essential
+guarantees necessary, for our restricted form of C, are that
+\begin{itemize}
+  \item A void pointer is not dereferenced.
+  \item Indexing into an array does not occur outside the memory allocated to
+    it.
+  \item No dangling pointers; in particular, a function should not return a
+    pointer to memory allocated within its own stack frame.
+\end{itemize}
+
+\noindent
+Our claim is that for the fragment of C generated, these type checks are
+sufficient to guarantee generated programs are memory safe (a forthcoming paper
+will make this argument explicit).
+
+In addition, Ivory programs have an \emph{effects} type associated with them.
+There are three kinds of effects tracked:
+\begin{itemize}
+  \item Allocation scope: whether a program fragment performs (stack-based)
+    memory allocation as well as whether pointers point into global or stack memory.
+  \item Returns: whether a program fragment contains a \texttt{return} statement.
+  \item Breaks: whether a program fragment contains a \texttt{break} statement.
+\end{itemize}
+
+\noindent
+Tracking allocation effects helps in reasoning about memory usage, but the main
+benefit is to reason about data provenance for pointers: pointers into a stack
+frame cannot effect global memory.  Return and break statements fundamentally
+effect control-flow and can result in unexpected behavior by breaking out of the
+current block or returning from a function.  Such effects are particularly
+dangerous in the context of an EDSL in which programs are generated and
+manipulated heavily in the host language.
+
+\paragraph{Type-checking}
+In an EDSL, we have two options for type checking: (1) write a domain-specific
+type-checker, using the Haskell type-system just for macro-level type-checking,
+or (2) embed the domain-specific type checker into Haskell's.  In developing
+Ivory, our thesis was that the type-level extensions to the version of Haskell
+supported by the Glasgow Haskell Compiler~\cite{} \todo{cite Hasochism Connor
+  McBride paper} make it feasible to embed the type checker in the Haskell type
+system.  Such a result 
+
+
+
+
 \begin{itemize}
 \item Brief overview of Ivory.
 \item Note that types are embedded in GHC type-checker.
@@ -8,3 +109,11 @@
 \item Insert checks into compiler.  Easy with EDSL  (blog post).
 \end{itemize}
 
+
+\begin{enumerate}
+  \item Haskell type-checking (Haskell compilation)
+  \item Domain-specific type-checking
+  \item C compilation
+  \item Static analysis
+  \item Execution
+\end{enumerate}

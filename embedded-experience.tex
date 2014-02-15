@@ -31,6 +31,7 @@
 
 \usepackage{ifthen}
 \usepackage{color}
+\usepackage{framed}
 
 \newboolean{td}
   \setboolean{td}{true} % modify here
@@ -38,7 +39,7 @@
              {\newcommand{\todo}[1]{\textcolor{blue}{TODO: #1}}}
              {\newcommand{\todo}[1]{}}
 
-\usepackage{amsmath}
+\usepackage{mathtools}
 
 
 \begin{document}
@@ -106,11 +107,6 @@ keyword1, keyword2
 \input{conclusion}
 
 
-\section{Acknowledgments}*
-
-This work is supported by DARPA contract \todo{contract no.}.  Opinions
-expressed herein are our own.
-
 %% \appendix
 %% \section{Appendix Title}
 
@@ -118,7 +114,8 @@ expressed herein are our own.
 
 \acks
 
-Acknowledgments, if needed.
+This work is supported by DARPA contract \todo{contract no.}.  Opinions
+expressed herein are our own.
 
 % We recommend abbrvnat bibliography style.
 

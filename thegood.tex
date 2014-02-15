@@ -1,14 +1,47 @@
 \section{The Good}
 
-\subsection{Type-Check When You Cannot Interpret}
+In this section, we discuss some of the benefits of EDSLs for embedded
+programming.  Some of these benefits were surprising to us, even with our
+previous experience in functional programming and embedded development.
 
-\begin{itemize}
-  \item C (or really any low-level lang) has no interpreter.  Really long
-  compile-debug loop.  Building an interpreter is impractical (i.e., modeling
-  HW, etc.), so do the next-best thing: type-check.  Give some examples with
-  Ivory/Tower.
+\paragraph{Type-checking as interpretation}
+Build times are non-trivial for large software systems.  (Some of our kernel
+developers at Galois are known to have novels on hand to read during the build
+and test cycle.)  Modern C compilers are reasonably fast, but compiling 10s of
+thousands of lines of code can take 10s of seconds.  In addition, during testing
+and integration, our build includes various test builds and builds for multiple
+operating-system and hardware configurations meaning that the same source code
+gets recompiled multiple times.
 
-  \item cool things: safe drivers as easy as safe user-code.
-\end{itemize}
+Then, to execute the software on the embedded device, we have to write the
+software to the device's memory (we refer to this as ``flashing'' the device,
+since the executable is stored in non-volatile flash memory on a number of
+microcontrollers).  Flashing can take many seconds.
+
+All this is to say that the time between making a change in the sources to when
+the changes are tested can be many seconds or minutes.  The situation is
+exacerbated when we use an EDSL to generate the C code; the EDSL must be
+compiled by Haskell; the haskell program is executed to generate the C code, and
+then the C code is compiled, linked, and flashed.
+
+High-level languages like Haskell have a read-eval-print-loop (REPL),
+significantly reducing development time since it allows the developer to
+type-check and test programs without going through the full compilation cycle.
+Embedded C does not have a REPL, and building one is a major undertaking: it
+would require a model of the sensors and devices the program interacts with, a
+model of the operating system, as well as library code (e.g.,
+glibc).\footnote{An emulator like QEMU~\cite{} does not solve the problem: (1)
+  QEMU is not an interpreter, and often it is not useful at all if the
+  application code interacts with sensors and external devices.}
+
+
+
+\paragraph{Mario programming}
+We are all just plumbers.
+
+\paragraph{The five-minute driver}
+Safe drivers as easy as user-code.  (Note Microsoft focus on drivers)
+
+\todo{no seg faults}
 
 
