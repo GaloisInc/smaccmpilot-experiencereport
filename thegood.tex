@@ -1,14 +1,19 @@
 \section{The Good}
 
-In this section, we discuss some of the benefits of EDSLs for embedded
-programming.  Some of these benefits were surprising to us, even with our
-previous experience in functional programming and embedded development.
+In this section, we discuss some of the surprising benefits of using EDSLs for
+embedded programming, focusing on those that were surprising to us, despite our
+teams' previous experience in functional programming and embedded development.
 
 \paragraph{Type-checking as interpretation}
 Build times are non-trivial for large software systems.  (Some of our kernel
 developers at Galois are known to have novels on hand to read during the build
-and test cycle.)  Modern C compilers are reasonably fast, but compiling 10s of
-thousands of lines of code can take 10s of seconds.  In addition, during testing
+and test cycle.)  At the time of writing, a fresh build of SMACCMPilot and
+associated test programs is \lp{XXX} minutes.  One reason the build time is so
+large is that it requires Cabal (the Haskell package manager) to discover
+library dependencies and install packages, compiler the Haskell sources, and
+then compile the C sources.
+
+In addition, during testing
 and integration, our build includes various test builds and builds for multiple
 operating-system and hardware configurations meaning that the same source code
 gets recompiled multiple times.
@@ -39,7 +44,11 @@ glibc).\footnote{An emulator like QEMU~\cite{} does not solve the problem: (1)
 \paragraph{Mario programming}
 We are all just plumbers.
 
-\paragraph{The five-minute driver}
+\paragraph{The 7-minute driver}
+A sports science research article has recently popularized the idea of a
+``7~minute workout'' that is short but intense~\cite{}.  We 
+
+
 Safe drivers as easy as user-code.  (Note Microsoft focus on drivers)
 
 \lp{no seg faults}
