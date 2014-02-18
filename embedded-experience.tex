@@ -39,8 +39,12 @@
 \newboolean{td}
   \setboolean{td}{true} % modify here
   \ifthenelse{\boolean{td}}
-             {\newcommand{\todo}[1]{\textcolor{blue}{TODO: #1}}}
-             {\newcommand{\todo}[1]{}}
+             {\newcommand{\ph}[1]{\textcolor{blue}{PH: #1}}
+               \newcommand{\lp}[1]{\textcolor{blue}{LP: #1}}
+             }
+             {\newcommand{\ph}[1]{}
+               \newcommand{\lp}[1]{}
+             }
 
 \newenvironment{code}{\begin{alltt}\footnotesize}{\end{alltt}}
 \newcommand{\cd}[1]{\texttt{#1}}
@@ -117,7 +121,7 @@ keyword1, keyword2
 
 \acks
 
-This work is supported by DARPA contract \todo{contract no.}.  Opinions
+This work is supported by DARPA contract \lp{contract no.}.  Opinions
 expressed herein are our own.
 
 % We recommend abbrvnat bibliography style.

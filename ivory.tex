@@ -12,13 +12,13 @@ language with a rich set of existing libraries.
 
 The language we developed for generating safe embedded C code is called
 \emph{Ivory}.  Ivory shares the goal of other ``safe-C'' programming languages.
-Notable related work includes \todo{Cyclone, Iavor's stuff, etc.}.  From a
+Notable related work includes \lp{Cyclone, Iavor's stuff, etc.}.  From a
 practical standpoint, most of these languages have bit-rotted, but our main
 motivation for not using them is that our desire for a Turing-complete,
 type-safe macro-language to improve our productivity.
 
 There have also been ``safe-C'' EDSL efforts.  Notable examples include
-\todo{Atom, Copilot, FeldSpar}.  \todo{However, languages also have some
+\lp{Atom, Copilot, FeldSpar}.  \lp{However, languages also have some
   drawbacks.}
 
 The essential contributions of Ivory from a programming language perspective are
@@ -105,7 +105,7 @@ pursue option (2).  (We discuss the issues of finding errors early on in more
 detail in Section~\ref{}.)
 
 Our hypothesis when developing Ivory was that the type-level extensions to the
-version of Haskell supported by the Glasgow Haskell Compiler~\cite{} \todo{cite
+version of Haskell supported by the Glasgow Haskell Compiler~\cite{} \lp{cite
   Hasochism Connor McBride paper} make it feasible to embed the type-checks
 necessary to ensure memory-safe C programming into the type system.  From a
 practical standpoint, doing so demonstrates just how far the type-system has

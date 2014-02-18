@@ -18,13 +18,13 @@ The breadth and scope of the project sets it apart.  The term `autopilot'
 actually understates the software system built; SMACCMPilot's use of EDSLs
 includes not just the core flight control algorithms, but also device drivers,
 encrypted network stack, mode logic, and concurrency and task management.  In
-all, our project involved some \todo{XXX} lines of Haskell-hosted EDSL code that
-generates \todo{YYY} lines of embedded C.  It is one of the largest and most
+all, our project involved some \ph{XXX} lines of Haskell-hosted EDSL code that
+generates \ph{YYY} lines of embedded C.  It is one of the largest and most
 embedded system developed using the EDSL approach.
 
 Our story is a largely positive one: we developed the languages and their (EDSL)
-compilers from scratch in approximately \todo{XXX} engineer-months then we used
-them to build SMACCMPilot in another \todo{YYY} engineer-months.  We achieved a
+compilers from scratch in approximately \ph{XXX} engineer-months then we used
+them to build SMACCMPilot in another \ph{YYY} engineer-months.  We achieved a
 dramatic increase in productivity.  Furthermore, we achieved an increase in
 code quality; our generated C code is free from memory-safety errors.
 
@@ -35,13 +35,13 @@ developing new EDSLs for low-level programming as well as practitioners
 considering using EDSLs.
 
 
-\todo{Indeed, a number of
+\lp{Indeed, a number of
 researchers have explored EDSLs for generating embedded C code, such as
-Atom~cite{}, Feldspar~\cite{}, Copilot~\cite{}, \todo{more}.  However, these
+Atom~cite{}, Feldspar~\cite{}, Copilot~\cite{}, \lp{more}.  However, these
 languages are still at the application level
 }
 
-\todo{In this experience report, we describe lessons learned in the use of EDSLs to
+\lp{In this experience report, we describe lessons learned in the use of EDSLs to
 build a complex embedded system: a secure autopilot called
 \emph{SMACCMPilot}.\footnote{\emph{SMACCM} is an acronym for Secure
   Mathematically-Assured Composition of Control Models.}
