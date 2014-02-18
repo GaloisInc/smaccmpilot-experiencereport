@@ -6,13 +6,12 @@ new programming language and compiler from the ground up.
 
 Of course, developing an EDSL is not the same as developing a stand-alone
 compiler.  Much of the typical compiler tool-chain, like the front-end
-parser/lexer, is obviated.
+parser/lexer, is obviated.  Furthermore, we were confident that time ``lost'' in
+writing the EDSL would be made up by developing in a high-level functional
+language with a rich set of existing libraries.
 
-Furthermore, we were confident that time ``lost'' in writing the EDSL would be
-made up by developing in Haskell.
-
-The goal of Ivory is to ensure the programmer writes safe embedded C code.  In
-that regard, Ivory shares the goal of other ``safe-C'' programming languages.
+The language we developed for generating safe embedded C code is called
+\emph{Ivory}.  Ivory shares the goal of other ``safe-C'' programming languages.
 Notable related work includes \todo{Cyclone, Iavor's stuff, etc.}.  From a
 practical standpoint, most of these languages have bit-rotted, but our main
 motivation for not using them is that our desire for a Turing-complete,
@@ -28,16 +27,17 @@ its expressiveness and our approach to type-safety.
 \paragraph{Expressiveness}
 Regarding the former, Ivory has a number of features:
 
-\begin{itemize}
-  \item Memory-areas: stack-based allocation of memory areas~\cite{}.
-  \item Product types: C structs and well-typed getters.
-  \item FFI: typed interfaces for calling arbitrary C code.
-  \item Module system: managing dependencies to support C-level headers and
+\begin{compactitem}
+  \item \emph{Memory-areas}: stack-based allocation of data~\cite{}.
+  \item \emph{Product types}: C structs and well-typed getters.
+  \item \emph{FFI}: typed interfaces for calling arbitrary C functions.
+  \item \emph{Module system}: managing dependencies to support C-level headers and
     includes.
-  \item Bit-fields: support for typed manipulation of bit-fields and registers~\cite{}.
-\end{itemize}
+  \item \emph{Bit-fields}: support for typed manipulation of bit-fields and registers~\cite{}.
+\end{compactitem}
 
-As well, Ivory has some limitations.  Ivory does not support heap-based dynamic
+As well, Ivory has some limitations, motivated by making analysis simpler to
+ensure safe C programs are generated.  Ivory does not support heap-based dynamic
 memory allocation (but global variables can be defined).  C arrays are
 fixed-length.  There is no pointer arithmetic.  Pointers are non-nullable.
 Union types are not supported.  Unsafe casts are not supported: casts must to a
@@ -47,24 +47,26 @@ for casts otherwise.  In particular, no void-type exists.
 
 In Ivory, these have not been limiting factors, particularly because of the
 power of using Haskell as a macro system.  For example, while arrays must be of
-fixed size, we can define a single \emph{Haskell} function that is polymorphic
-in the array size that becomes instantiated at a particular size at each use
-site.  For example, consider the following code:
+fixed size at C compile-time, we can define a single \emph{Haskell} function
+that is polymorphic in the array size that becomes instantiated at a particular
+size at each use site.  %% An array has the type
 
-\todo{array example}
+%% \begin{code}
+%% Array (n::Nat) t
+%% \end{code}
 
 \paragraph{Type-level properties}
 Ivory's domain-specific type checking focuses essentially on guaranteeing memory
-safety and helping the programmer reason about her programs nonfunctional
+safety and helping the programmer reason about her programs' nonfunctional
 behaviors more easily.  With respect to memory safety, the essential
 guarantees necessary, for our restricted form of C, are that
-\begin{itemize}
-  \item A void pointer is not dereferenced.
-  \item Indexing into an array does not occur outside the memory allocated to
-    it.
-  \item No dangling pointers; in particular, a function should not return a
+\begin{compactitem}
+  \item a void pointer is not dereferenced;
+  \item indexing into an array does not occur outside the memory allocated to
+    it;
+  \item no dangling pointers; in particular, a function should not return a
     pointer to memory allocated within its own stack frame.
-\end{itemize}
+\end{compactitem}
 
 \noindent
 Our claim is that for the fragment of C generated, these type checks are
@@ -72,13 +74,15 @@ sufficient to guarantee generated programs are memory safe (a forthcoming paper
 will make this argument explicit).
 
 In addition, Ivory programs have an \emph{effects} type associated with them.
-There are three kinds of effects tracked:
-\begin{itemize}
-  \item Allocation scope: whether a program fragment performs (stack-based)
+There are three kinds of effects tracked:\footnote{These effects have no
+  relation to the recently popularized monad effects work, e.g.,~\cite{}.}
+\begin{compactitem}
+  \item \emph{Allocation scope}: whether a program performs (stack-based)
     memory allocation as well as whether pointers point into global or stack memory.
-  \item Returns: whether a program fragment contains a \texttt{return} statement.
-  \item Breaks: whether a program fragment contains a \texttt{break} statement.
-\end{itemize}
+  \item \emph{Returns}: whether a program contains a \cd{return} statement.
+  \item \emph{Breaks}: whether a program contains a \cd{break}
+    statement.
+\end{compactitem}
 
 \noindent
 Tracking allocation effects helps in reasoning about memory usage, but the main
@@ -89,31 +93,238 @@ current block or returning from a function.  Such effects are particularly
 dangerous in the context of an EDSL in which programs are generated and
 manipulated heavily in the host language.
 
-\paragraph{Type-checking}
+\subsection{Type checking}
 In an EDSL, we have two options for type checking: (1) write a domain-specific
-type-checker, using the Haskell type-system just for macro-level type-checking,
-or (2) embed the domain-specific type checker into Haskell's.  In developing
-Ivory, our thesis was that the type-level extensions to the version of Haskell
-supported by the Glasgow Haskell Compiler~\cite{} \todo{cite Hasochism Connor
-  McBride paper} make it feasible to embed the type checker in the Haskell type
-system.  Such a result 
+type-checker \emph{in} Haskell (relying on Haskell's type-system just for
+macro-level type-checking), or (2) embed the domain-specific type checker into
+Haskell's type checker.
+
+For a large system such as SMACCMPilot, the development times are substantial.
+Therefore, our goal is to learn about program errors early, motivating us to
+pursue option (2).  (We discuss the issues of finding errors early on in more
+detail in Section~\ref{}.)
+
+Our hypothesis when developing Ivory was that the type-level extensions to the
+version of Haskell supported by the Glasgow Haskell Compiler~\cite{} \todo{cite
+  Hasochism Connor McBride paper} make it feasible to embed the type-checks
+necessary to ensure memory-safe C programming into the type system.  From a
+practical standpoint, doing so demonstrates just how far the type-system has
+come, allowing us to replicate the type safety of compilers like Cyclone,
+etc. without implementing our own type checker.
+
+We do not have space to describe the full embedded type system for Ivory.  To
+give the reader a sense of the type system, we show a portion of the effects
+system and how dangling pointers are prevented in a toy version of the language.
+
+\paragraph{Effects}
+Using the data kinds~\cite{} and type families~\cite{} extensions, we define a
+type-level record to track effects.  Using the data kind extension to lift data
+types to define kinds and types, we define a kind \cd{RetEff} with the type
+\cd{Ret r} denoting that an Ivory code block contains a return statement, and if
+so, the type of the value returned.  If there is no return statement, the
+associated type is \cd{NoRet}.
+\begin{code}
+data RetEff   = forall r. Ret r | NoRet
+\end{code}
+\noindent
+We similarly define an allocation kind containing types that denote whether
+there is local or global memory allocation as well as the type of the value
+allocated:
+\begin{code}
+data AllocEff = forall s. Scope s | NoAlloc
+\end{code}
+\noindent
+Using type families, we define rewrite rules that are type-level record
+selectors that take a type of kind \cd{Effects} and returns the field (a type)
+of interest:
+\begin{code}
+data Effects  = Effects AllocEff RetEff
+
+type family   GetRet (effs :: Effects) :: RetEff
+type instance GetRet ('Effects s r) = r
+
+type family   GetAlloc (effs :: Effects) :: AllocEff
+type instance GetAlloc ('Effects s r) = s
+\end{code}
+\noindent
+(The tick mark disambiguates whether we use a term to denote a type or kind;
+with the tick, it is used as a type.)  Our ``record approach'' allows us to
+encode an arbitrary number of effects in a single type.  In Ivory, there is an
+additional effect tracking the use of \cd{break} statements.
+
+For convenience, we define a type synonym corresponding to effects for a C
+function: it should contain a return statement and there may be memory
+allocation:
+\begin{code}
+type FnEffects s r = 'Effects (Scope s) (Ret r)
+\end{code}
+
+\paragraph{Ivory Type Checking}
+Ivory is a monadic language.  In demonstrating type-checking, the monad
+implementation is not important except to note that it is parameterized by an
+effects parameter.  (In practice, the Ivory monad is a writer transformer (to
+record statements) over the state monad (to generate fresh names).  For our
+purposes, here, we can use the identity monad.)
+\begin{code}
+newtype Ivory (eff :: Effects) a = Ivory ...
+  deriving Monad
+\end{code}
+\noindent
+Now we define a data type \cd{Body r} that contains the body of a Ivory
+function.
+\begin{code}
+newtype Body r = Body
+  { runBody :: forall s. Ivory (FnEffects s r) () }
+\end{code}
+\noindent
+Its type parameter corresponds to the type of the value returned.  Using rank~2
+quantification, we ensure the allocation type cannot escape.
+
+We now have the machinery to define an Ivory statement.  \cd{ret} corresponds to
+the \cd{return} statement in C:
+\begin{code}
+ret :: (GetRet eff ~ Ret r) => r -> Ivory eff ()
+ret r = undefined
+\end{code}
+\noindent
+The function \cd{ret} takes a value and returns a monadic action.  Note the
+type-equality constraint that ensures that the \cd{Ret} field of the type-level
+record equals \cd{Ret r}, corresponding to the value returned.  (Again, in this
+model we do not care about the implementation of the function.)
+
+Now we can write an Ivory program such as
+\begin{code}
+i0 :: Body Integer
+i0 = Body (ret 42)
+\end{code}
+\noindent
+Or to model returning \cd{void},
+\begin{code}
+i1 :: Body ()
+i1 = Body (ret ())
+\end{code}
+
+Let us add a little more machinery to model allocation.  Again using the data
+kinds extension, we define the kind \cd{RefScope} containing two types that
+denote the scope of allocation.
+\begin{code}
+data RefScope
+  = Global
+  | forall s. Stack s
+\end{code}
+\noindent
+A reference is a pointer that is guaranteed by construction to be non-null.  The
+type constructor's first parameter is the scope of the reference and the second
+is the type of the value referenced.  (In the actual implementation, \cd{a} is a
+type with kind \cd{Area}, denoting all the types that can be allocated.)
+\begin{code}
+data Ref (ref :: RefScope) a = Ref
+\end{code}
+\noindent
+In our model, we provide a trivial value constructor \cd{Ref}.
+
+
+Now we can define an operator to allocate stack-based memory.
+\begin{code}
+local :: (GetAlloc eff ~ Scope s)
+      => Ivory eff (Ref (Stack s) a)
+local = undefined
+\end{code}
+\noindent
+Just like with the \cd{ret} statement, there is a type equality constraint, but
+the Ivory return type is a reference to a stack-allocated value.  The return
+type, together with the rank-2 definition of \cd{Body}, ensures we cannot return
+a stack-allocated reference created inside a function body.  (Again, we do not
+care about the implementation.  Furthermore, in Ivory, \cd{local} takes an
+initializer as an argument.
+
+We need one more operator to dereference pointers.
+\begin{code}
+deref :: Ref ref a -> Ivory eff a
+deref ref = undefined
+\end{code}
+\noindent
+The \cd{deref} operator takes a reference and returns the referenced value.
+
+Now we can define Ivory programs that allocate a local value, dereference it,
+and then return the value, which is memory safe:
+\begin{code}
+i2 :: Body r
+i2 = Body $ do
+  l <- local
+  v <- deref l
+  ret v
+\end{code}
+%% $
+
+We can also pass a stack-allocated reference to a function, work with it
+(including storing new values in the memory area), and then return the reference:
+\begin{code}
+i2 :: Ref (Stack s) a -> Body (Ref (Stack s) a)
+i2 l = Body $ do
+  v <- deref l
+  ...
+  ret l
+\end{code}
+% $
+
+However, returning a reference created locally is a type-error:
+\begin{code}
+i3 = Body (ret =<< local)
+\end{code}
+%% $
+\noindent
+No possible type can be given to \cd{i3}.  The ``closest'' type is something
+like
+\begin{code}
+Body (Ref (Stack x) a)
+\end{code}
+\noindent
+But the type variable \cd{x} must unify with the universally quantified
+\cd{s} in the type of the argument to the value constructor \cd{Body}, which is
+not possible.  Note that if the type of \cd{local} were instead
+\begin{code}
+(GetAlloc eff ~ Scope s) => Ivory eff (Ref Global a)
+\end{code}
+\noindent
+The program \cd{i3} would be well-typed as \cd{Body (Ref Global a)}.
 
 
 
 
-\begin{itemize}
-\item Brief overview of Ivory.
-\item Note that types are embedded in GHC type-checker.
-\item Philosophy: push errors higher into the design cycle (C runtime to C
-  compile time to DSL runtime to typechecking time).
-\item Insert checks into compiler.  Easy with EDSL  (blog post).
-\end{itemize}
+%% Memory-allocated types have a distinct kind.  The benefit of doing so is that
+%% type classes with methods operating on memory areas are defined closed under .
+%% The type of all data that can be allocated (either globally or locally) has kind
+%% \cd{Area k}:
+%% \begin{code}
+%% data Area k
+%%   = Array Nat (Area k)
+%%   | Struct Symbol
+%%   | ...
+%% \end{code}
+%% \noindent
+%% We have elided a few additional memory area types.  Note to that the data type
+%% is used only to define a kind and its types~\cite{}; we do not use \cd{Array},
+%% etc. as value constructors.  The type constructor for an array type
+%% takes a type-level natural number (from \cd{GHC.TypeLits}) representing its
+%% length at the type-level and the type of the values contained in the array.
+%% Similarly, the type constructor for a struct type takes a type-level string that
+%% names the struct definition.
 
 
-\begin{enumerate}
-  \item Haskell type-checking (Haskell compilation)
-  \item Domain-specific type-checking
-  \item C compilation
-  \item Static analysis
-  \item Execution
-\end{enumerate}
+%% \begin{compactitem}
+%% \item Brief overview of Ivory.
+%% \item Note that types are embedded in GHC type-checker.
+%% \item Philosophy: push errors higher into the design cycle (C runtime to C
+%%   compile time to DSL runtime to typechecking time).
+%% \item Insert checks into compiler.  Easy with EDSL  (blog post).
+%% \end{compactitem}
+
+
+%% \begin{compactenum}
+%%   \item Haskell type-checking (Haskell compilation)
+%%   \item Domain-specific type-checking
+%%   \item C compilation
+%%   \item Static analysis
+%%   \item Execution
+%% \end{compactenum}

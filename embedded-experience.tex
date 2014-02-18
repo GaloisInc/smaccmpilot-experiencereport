@@ -32,6 +32,9 @@
 \usepackage{ifthen}
 \usepackage{color}
 \usepackage{framed}
+\usepackage{paralist}
+\usepackage{mathtools}
+\usepackage{alltt}
 
 \newboolean{td}
   \setboolean{td}{true} % modify here
@@ -39,8 +42,8 @@
              {\newcommand{\todo}[1]{\textcolor{blue}{TODO: #1}}}
              {\newcommand{\todo}[1]{}}
 
-\usepackage{mathtools}
-
+\newenvironment{code}{\begin{alltt}\footnotesize}{\end{alltt}}
+\newcommand{\cd}[1]{\texttt{#1}}
 
 \begin{document}
 
