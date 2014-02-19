@@ -8,49 +8,111 @@ teams' previous experience in functional programming and embedded development.
 Build times are non-trivial for large software systems.  (Some of our kernel
 developers at Galois are known to have novels on hand to read during the build
 and test cycle.)  At the time of writing, a fresh build of SMACCMPilot and
-associated test programs is \lp{XXX} minutes.  One reason the build time is so
-large is that it requires Cabal (the Haskell package manager) to discover
-library dependencies and install packages, compiler the Haskell sources, and
-then compile the C sources.
-
-In addition, during testing
-and integration, our build includes various test builds and builds for multiple
-operating-system and hardware configurations meaning that the same source code
-gets recompiled multiple times.
+associated test programs is over seven minutes of real time (and 12~minutes of
+CPU time since we have a multi-threaded build system).  One reason the build
+time is so large is that it requires Cabal (the Haskell package manager) to
+discover library dependencies and install packages, compile the Haskell sources,
+and then compile the C sources.  As well, some sources are compiled multiple
+times for different targets (e.g., tests on multiple operating systems).
 
 Then, to execute the software on the embedded device, we have to write the
 software to the device's memory (we refer to this as ``flashing'' the device,
 since the executable is stored in non-volatile flash memory on a number of
 microcontrollers).  Flashing can take many seconds.
 
-All this is to say that the time between making a change in the sources to when
-the changes are tested can be many seconds or minutes.  The situation is
-exacerbated when we use an EDSL to generate the C code; the EDSL must be
-compiled by Haskell; the haskell program is executed to generate the C code, and
-then the C code is compiled, linked, and flashed.
+All this is to say that the end-to-end debug cycle might mean only testing a
+handful of changes per hour.  Clearly, the debug cycle in embedded development
+particularly motivates us to make fewer bugs and to discover them early.
 
-High-level languages like Haskell have a read-eval-print-loop (REPL),
-significantly reducing development time since it allows the developer to
-type-check and test programs without going through the full compilation cycle.
-Embedded C does not have a REPL, and building one is a major undertaking: it
-would require a model of the sensors and devices the program interacts with, a
-model of the operating system, as well as library code (e.g.,
-glibc).\footnote{An emulator like QEMU~\cite{} does not solve the problem: (1)
-  QEMU is not an interpreter, and often it is not useful at all if the
-  application code interacts with sensors and external devices.}
+Compilers for high-level languages like Haskell, such as GHC, generally have a
+read-eval-print-loop (REPL), significantly reducing development time since it
+allows the developer to type-check and test programs without going through the
+full compilation cycle.
+
+C compilers do not have a REPL, and building one, particularly for embedded
+hardware, would be a major undertaking requiring a model of the sensors and
+devices the program interacts with, a model of the operating system, as well as
+library code (e.g., glibc).  In short, we are stuck with doing most testing on
+the real hardware.\footnote{An emulator like QEMU~\cite{} does not solve the
+  problem: (1) QEMU is not an interpreter, and often it is not useful at all if
+  the application code interacts with sensors and external devices.}
+
+During development, it has slowly become apparent how useful the GHC REPL is for
+embedded development using EDSLs.  As described in Section~\ref{sec:ivory}, we
+have embedded Ivory's type system in Haskell's.  Thus, domain-specific
+type-errors are caught during Haskell type-checking, which can be done within
+the REPL---we do not even have to execute the Haskell code.  The upshot is that
+Ivory programs that would generate unsafe C programs are caught nearly
+instantaneously.  If type-checking passes, we know the generated C will be
+memory-safe.
+
+In addition, we have found it useful detect potential bugs even if the C
+compiler might detect them.  To take one example, consider unused variable
+declarations.  While a C compiler can detect this, perhaps late in the
+compilation phase, we discover these warnings nearly instantaneously as a
+warning the GHC REPL.  Moreover, the more preprocessing we can do in Haskell,
+the more potential errors we may find.
+
+Not all bugs can be detected during type-checking.  For the most part, once
+type-checking is complete, we are confident that the bug is a logical bug.  We
+do not spend our time chasing segmentation faults or strange undefined or
+compiler-dependent behaviors but rather focus on the bugs result from our
+misunderstanding of the application, not the programming environment.
+
+\paragraph{Plumbing programming}
+The most tedious part of adding many new features to SMACCMPilot is the business
+logic in Tower: defining a new task, and then ``plumbing'' all the communication
+channels through the code.  There is nothing conceptually difficult in doing so.
+It simply requires modifying the arguments to a Haskell function that generates
+a Tower task (or modifying the fields of a data-type if channels have been
+grouped together).  Channels are typed, so type-checking detects most plausible
+inter-task communication errors.
+
+Stepping back, the idea that plumbing arguments to Haskell functions is the
+hardest part of embedded development is amazing.  We are not dealing with bugs
+in low-level OS interfaces, we are not dealing mistakes timing errors in
+communication, we are not dealing with type-errors like you might find in raw C
+(where data might be case to \cd{void} or \cd{char[]}.
+
+Because plumbing is so easy, it encourages us to improve modularity in the
+system.  Defining a new RTOS task is easy, so we might as well modularize
+functionality to improve isolation and security.  For example, in the ground
+station communication subsystem, encryption and decryption are each executed in
+isolated tasks, simplifying the architectural analysis of the system.
+
+\paragraph{Control your compiler}
+If we were writing our application in a typical compiled language, even a
+high-level one, and found such a bug in the compiler, we would perhaps file a
+bug report with the developers... and wait.  If we had access to the sources, we
+might try making a change, but doing so risks introducing new bugs or at the
+least, forking.  Most likely, the compiler would not change, and we’d either
+make some \emph{ad-hoc} work-around or introduce regression tests to make sure
+that the specific bug found is not hit again.  Such a situation is notorious in
+embedded cross-compilers that usually have a small support team and are
+themselves many revisions behind the main compiler tool-chain.
+
+But with an EDSL, the situation is different.  With a small code-base
+implementing the compiler, it’s easy to write new passes or inspect passes for
+errors.  Rebuilding the compiler takes seconds.
+
+More generally, we have a different mindset programming in an EDSL: if a class
+of bug occurs a few times---whether resulting in the compiler or not---we change
+the language/compiler to eliminate it (or at least to automatically insert
+verification conditions to check for it).  Instead of a growing test-suite, we
+have a growing set of checks in the compiler, to help eliminate both our bugs
+and the bugs in \emph{all} future Ivory programs.
+
+\paragraph{Safe drivers}
+\ph{worth having a section like this?, tower plus bit-data makes drivers easy.
+  If so, can you write this?}
+
+%% Safe drivers as easy as user-code.  (Note Microsoft focus on drivers)
+
+%% A sports science research article has recently popularized the idea of a
+%% ``7~minute workout'' that is short but intense~\cite{}.
 
 
 
-\paragraph{Mario programming}
-We are all just plumbers.
 
-\paragraph{The 7-minute driver}
-A sports science research article has recently popularized the idea of a
-``7~minute workout'' that is short but intense~\cite{}.  We 
-
-
-Safe drivers as easy as user-code.  (Note Microsoft focus on drivers)
-
-\lp{no seg faults}
 
 

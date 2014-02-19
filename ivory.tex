@@ -1,4 +1,5 @@
 \section{Ivory: Safe C Programming}
+\label{sec:ivory}
 
 At face value: our approach sounds audacious if not simply ludicrous: faced with
 developing new autopilot software in one-and-a-half years, start by designing a
@@ -174,7 +175,7 @@ Now we define a data type \cd{Body r} that contains the body of a Ivory
 function.
 \begin{code}
 newtype Body r = Body
-  { runBody :: forall s. Ivory (FnEffects s r) () }
+  \{ runBody :: forall s. Ivory (FnEffects s r) () \}
 \end{code}
 \noindent
 Its type parameter corresponds to the type of the value returned.  Using rank~2
@@ -208,9 +209,7 @@ Let us add a little more machinery to model allocation.  Again using the data
 kinds extension, we define the kind \cd{RefScope} containing two types that
 denote the scope of allocation.
 \begin{code}
-data RefScope
-  = Global
-  | forall s. Stack s
+data RefScope = Global | forall s. Stack s
 \end{code}
 \noindent
 A reference is a pointer that is guaranteed by construction to be non-null.  The
@@ -260,8 +259,8 @@ i2 = Body $ do
 We can also pass a stack-allocated reference to a function, work with it
 (including storing new values in the memory area), and then return the reference:
 \begin{code}
-i2 :: Ref (Stack s) a -> Body (Ref (Stack s) a)
-i2 l = Body $ do
+i3 :: Ref (Stack s) a -> Body (Ref (Stack s) a)
+i3 l = Body $ do
   v <- deref l
   ...
   ret l
@@ -270,11 +269,11 @@ i2 l = Body $ do
 
 However, returning a reference created locally is a type-error:
 \begin{code}
-i3 = Body (ret =<< local)
+i4 = Body (ret =<< local)
 \end{code}
 %% $
 \noindent
-No possible type can be given to \cd{i3}.  The ``closest'' type is something
+No possible type can be given to \cd{i4}.  The ``closest'' type is something
 like
 \begin{code}
 Body (Ref (Stack x) a)
@@ -287,10 +286,13 @@ not possible.  Note that if the type of \cd{local} were instead
 (GetAlloc eff ~ Scope s) => Ivory eff (Ref Global a)
 \end{code}
 \noindent
-The program \cd{i3} would be well-typed as \cd{Body (Ref Global a)}.
+The program \cd{i3} would be well-typed as
+\begin{code}
+Body (Ref Global a)
+\end{code}
 
 \lp{A small Ivory example?}
-
+\lp{Ivory compiler size?  implementation (front-end, back-end, opts, etc.)}
 
 
 %% Memory-allocated types have a distinct kind.  The benefit of doing so is that
