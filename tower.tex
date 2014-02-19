@@ -1,32 +1,38 @@
 \section{Tower: from Functions to Architectures}
 \label{sec:tower}
 
-Tower is a concurrency framework for composing Ivory programs. The primary
-motivation for building Tower is often called the ``glue code'' problem: we
-needed a way to communicate between Ivory programs in different threads.
 
-On embedded systems, we typically do not have access to high level operating
-system primitives like sockets or pipes that facilitate communication between
-separate processes. Instead, all programs run as threads in the same memory
-space, and a bare-bones operating system provides a few low-level primitives
-(semaphores, mutexes) for sharing information between tasks and scheduling.
-Building channels and event-loop based tasks based on these primitives either
-requires a runtime library or lots of tricky coding by hand to implement the
-various parts of the channel in the correct places.
+Embedded systems are generally designed to interact with multiple sources of
+input and output. Each hardware IO peripheral requires a driver to manage the
+hardware registers and interrupt events.
 
-Tower generates code to implement event loops in tasks and communication
-channels between tasks. The code generation, built on top of the Ivory language,
-offers safety guarantees because it does not expose the dangerous low-level
-scheduling primitives to the user, and it keeps type information for channels
-(i.e. the datatype of the channel message), expressed as Ivory types, in the
-Haskell type system.
+So, in a typical embedded systems project, programmer must produce an entire
+system of software that interacts with multiple input and output peripherals
+concurrently using a real-time operating system (RTOS). Typical RTOSes provide
+just a few low-level locking and signaling primitives for scheduling. Since
+microcontrollers do not have virtual memory managment units (MMUs) found on
+larger processors, the RTOS kernel can't protect the system against badly
+behaved user code. These restrictions put significant burden on the programmer:
+she must ensure all tasks and communication between tasks is implemented
+correctly.
 
-Tower permits the user to describe a static graph of channels and tasks. This is
-a restriction of the capabilties of most operating systems, which may create and
-destroy tasks or communication datastructures at run-time. However, for the
-intended use case in high assurance systems, a static configuration of channels
-and tasks makes it easier to reason about memory requirements, and permits
-the system to be analyzed for schedulability.
+Luckily, we already have Ivory in our toolbox, which can provide lots of
+the guarantees we need about task memory safety. To handle the rest of these
+concerns, we've built Tower, an EDSL for specifying tasks and communication
+channels that generates correct Ivory implementations, as well as architecture
+description artifacts.
+
+Tower's code generation approach offers safety guarantees because it does not
+expose the dangerous low-level scheduling primitives to the user, and it keeps
+type information for channels (i.e. the datatype of the channel message),
+expressed as Ivory types, in the Haskell type system.
+
+Tower allows the programmer to describe a static graph of channels and tasks.
+This is a restriction of the capabilties of most operating systems, which may
+create and destroy tasks or communication datastructures at run-time. However,
+for the intended use case in high assurance systems, a static configuration of
+channels and tasks makes it easier to reason about memory requirements, and
+permits the system to be analyzed for schedulability.
 
 The static tower graph of channels and tasks also makes it possible to
 describe the system architecture to external tools. Tower has a backend which
@@ -63,5 +69,7 @@ Tower, it is trivial for the user to specify a system and compile it for
 different operating systems. Tower was first designed to support FreeRTOS, a
 popular open source RTOS for embedded systems. We have since added support for
 the eChronos operating system, an RTOS under development by NICTA.
+
+
 \ph{Give a tower example---maybe the LED driver example from the talks.}
 \ph{Show a diagram showing what all Tower generates---that'll help the text.}
