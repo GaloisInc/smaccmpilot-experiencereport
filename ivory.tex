@@ -1,40 +1,48 @@
 \section{Ivory: Safe C Programming}
 \label{sec:ivory}
 
-At face value: our approach sounds audacious if not simply ludicrous: faced with
-developing new autopilot software in one-and-a-half years, start by designing a
-new programming language and compiler from the ground up.
+At face value, our approach sounds audacious if not ludicrous: faced with a
+deadline for developing a new high-assurance autopilot system in one-and-a-half
+years, start by designing a new programming language and compiler from the
+ground up.
 
 Of course, developing an EDSL is not the same as developing a stand-alone
 compiler.  Much of the typical compiler tool-chain, like the front-end
-parser/lexer, is obviated.  Furthermore, we were confident that time ``lost'' in
+parser/lexer, is obviated.  Furthermore, we were confident that time spent in
 writing the EDSL would be made up by developing in a high-level functional
 language with a rich set of existing libraries.
 
 The language we developed for generating safe embedded C code is called
-\emph{Ivory}.  Ivory shares the goal of other ``safe-C'' programming languages.
-Notable related work includes \lp{Cyclone, Iavor's stuff, etc.}.  From a
-practical standpoint, most of these languages have bit-rotted, but our main
-motivation for not using them is that our desire for a Turing-complete,
-type-safe macro-language to improve our productivity.
+\emph{Ivory}.  Ivory shares the goal of other ``safe-C'' programming languages
+like Cyclone~\cite{cyclone}, BitC~\cite{bitc}, Rust~\cite{rust}, and the work on
+bit-data and memory areas in functional programming~\cite{high-level,memareas}.
+Cyclone and BitC are no longer actively supported.  While Rust is actively
+supported, our main motivation for not using it is to have the benefits of an
+EDSL and particularly our desire for a Turing-complete, type-safe macro-language
+to improve our productivity.
 
-There have also been ``safe-C'' EDSL efforts.  Notable examples include
-\lp{Atom, Copilot, FeldSpar}.  \lp{However, languages also have some
-  drawbacks.}
+There have also been some ``safe-C'' EDSLs including Atom~\cite{atom},
+Copilot~\cite{copilot}, and FeldSpar~\cite{feldspar1}.  The most significant
+difference between these languages and Ivory is that they are focused on pure
+computations and do not provide convenient support for defining in-memory
+data-structures and manipulating memory.  Ivory is designed to be a
+general-purpose embedded C EDSL that can be used for memory-manipulation
+intensive programs, such as device drivers.
 
 The essential contributions of Ivory from a programming language perspective are
 its expressiveness and our approach to type-safety.
 
 \paragraph{Expressiveness}
-Regarding the former, Ivory has a number of features:
+Regarding the expressiveness, Ivory has a number of features:
 
 \begin{compactitem}
-  \item \emph{Memory-areas}: stack-based allocation of data~\cite{}.
+  \item \emph{Memory-areas}: stack-based allocation of data~\cite{memareas}.
   \item \emph{Product types}: C structs and well-typed getters.
   \item \emph{FFI}: typed interfaces for calling arbitrary C functions.
   \item \emph{Module system}: managing dependencies to support C-level headers and
     includes.
-  \item \emph{Bit-fields}: support for typed manipulation of bit-fields and registers~\cite{}.
+  \item \emph{Bit-fields}: support for typed manipulation of bit-fields and
+    registers~\cite{high-level}.
 \end{compactitem}
 
 As well, Ivory has some limitations, motivated by making analysis simpler to
@@ -62,9 +70,9 @@ safety and helping the programmer reason about her programs' nonfunctional
 behaviors more easily.  With respect to memory safety, the essential
 guarantees necessary, for our restricted form of C, are that
 \begin{compactitem}
-  \item a void pointer is not dereferenced;
-  \item indexing into an array does not occur outside the memory allocated to
-    it;
+  \item null pointers are never dereferenced;
+  \item array indexing occurs only within the memory allocated to
+    the array;
   \item no dangling pointers; in particular, a function should not return a
     pointer to memory allocated within its own stack frame.
 \end{compactitem}
@@ -75,13 +83,12 @@ sufficient to guarantee generated programs are memory safe (a forthcoming paper
 will make this argument explicit).
 
 In addition, Ivory programs have an \emph{effects} type associated with them.
-There are three kinds of effects tracked:\footnote{These effects have no
-  relation to the recently popularized monad effects work, e.g.,~\cite{}.}
+There are three kinds of effects tracked:
 \begin{compactitem}
-  \item \emph{Allocation scope}: whether a program performs (stack-based)
+  \item \emph{Allocation effects}: whether a program performs (stack-based)
     memory allocation as well as whether pointers point into global or stack memory.
-  \item \emph{Returns}: whether a program contains a \cd{return} statement.
-  \item \emph{Breaks}: whether a program contains a \cd{break}
+  \item \emph{Return effects}: whether a program contains a \cd{return} statement.
+  \item \emph{Break effects}: whether a program contains a \cd{break}
     statement.
 \end{compactitem}
 
@@ -142,10 +149,10 @@ of interest:
 data Effects  = Effects AllocEff RetEff
 
 type family   GetRet (effs :: Effects) :: RetEff
-type instance GetRet ('Effects s r) = r
+type instance GetRet (`Effects s r) = r
 
 type family   GetAlloc (effs :: Effects) :: AllocEff
-type instance GetAlloc ('Effects s r) = s
+type instance GetAlloc (`Effects s r) = s
 \end{code}
 \noindent
 (The tick mark disambiguates whether we use a term to denote a type or kind;
@@ -157,7 +164,7 @@ For convenience, we define a type synonym corresponding to effects for a C
 function: it should contain a return statement and there may be memory
 allocation:
 \begin{code}
-type FnEffects s r = 'Effects (Scope s) (Ret r)
+type FnEffects s r = `Effects (Scope s) (Ret r)
 \end{code}
 
 \paragraph{Ivory Type Checking}
@@ -184,7 +191,7 @@ quantification, we ensure the allocation type cannot escape.
 We now have the machinery to define an Ivory statement.  \cd{ret} corresponds to
 the \cd{return} statement in C:
 \begin{code}
-ret :: (GetRet eff ~ Ret r) => r -> Ivory eff ()
+ret :: (GetRet eff \(\sim\) Ret r) => r -> Ivory eff ()
 ret r = undefined
 \end{code}
 \noindent
@@ -225,7 +232,7 @@ In our model, we provide a trivial value constructor \cd{Ref}.
 
 Now we can define an operator to allocate stack-based memory.
 \begin{code}
-local :: (GetAlloc eff ~ Scope s)
+local :: (GetAlloc eff \(\sim\) Scope s)
       => Ivory eff (Ref (Stack s) a)
 local = undefined
 \end{code}
@@ -283,13 +290,22 @@ But the type variable \cd{x} must unify with the universally quantified
 \cd{s} in the type of the argument to the value constructor \cd{Body}, which is
 not possible.  Note that if the type of \cd{local} were instead
 \begin{code}
-(GetAlloc eff ~ Scope s) => Ivory eff (Ref Global a)
+(GetAlloc eff \(\sim\) Scope s) => Ivory eff (Ref Global a)
 \end{code}
 \noindent
 The program \cd{i3} would be well-typed as
 \begin{code}
 Body (Ref Global a)
 \end{code}
+
+\begin{code}
+foo3 :: Def (`[Ref s (Array 10 (Stored Uint32))] :-> ())
+foo3 = proc "foo" $ \textbackslash{}arr -> body $ do
+  arrayMap $ \textbackslash{}ix -> do
+    v <- deref (arr ! ix)
+    store (arr ! ix) (v+1)
+\end{code}
+%% $
 
 \lp{A small Ivory example?}
 \lp{Ivory compiler size?  implementation (front-end, back-end, opts, etc.)}

@@ -1,64 +1,11 @@
 \section{Conclusions}
+\label{sec:conclusions}
 
 \lp{talk about assurance/productivity trade-offs}
 
 \lp{quasi quotation}
 
 
-
-\paragraph{Dog-fooding}
-Our experience using Ivory and Tower to build SMACCMPilot has been an exteme
-lesson in dog-fooding EDSLs.  We had multiple developers writing the compilers
-and using them to build applications concurrently.  There were real-time
-dependencies in our development.  For example, some of the authors (who shall
-remain nameless!)  introduced compiler bugs discovered by application
-developers.  The compiler bug had to be fixed in real-time.
-
-We learned a few lessons that are relevant to dog-fooding any compiler
-development but particularly relevant to EDSL development giving the fast
-development time.
-
-\begin{itemize}
-  \item \emph{Everything is a library}.  With an EDSL, and particularly a
-    Turing-complete macro language, everything is a library.  The distinction
-    between language developers and users becomes ambiguous.  As an extreme
-    example, one can think of Tower as ``just'' a library for Ivory.  A smaller
-    example is defining a conditional operator in terms of the Ivory
-    if-then-else (\cd{ifte\_}) primitive.  The full definition of \cd{cond\_} is below:
-    \begin{code}
-data Cond eff a = Cond IBool (Ivory eff a)
-
-(==>) :: IBool -> Ivory eff a -> Cond eff a
-(==>) = Cond
-
-cond_ :: [Cond eff ()] -> Ivory eff ()
-cond_ [] = return ()
-cond_ ((Cond b f):cs) = ifte_ b f (cond_ cs)
-    \end{code}
-\noindent
-All types above were introduced in Section~\cite{sec:ivory} with the exception
-of \cd{IBool}, which is the type of a Boolean, in Ivory.  With the \cd{cond\_}
-operator, we can write conditionals like
-\begin{code}
-cond_ [ x >? 100 ==> store result 10
-      , x >? 50  ==> store result 5
-      , true     ==> store result 0 ]
-\end{code}
-\noindent
-instead of
-\begin{code}
- ifte_ (x >? 100)
-   (store result 10)
-   (ifte_ (x >? 50)
-     (store result 5)
-       (store result 0))
-\end{code}
-
-  \item \emph{Simplification is necessary}.
-We wrote a constant folder for Ivory as a ``nice to have''
-
-  \item \emph{Clear semantics}.
-\end{itemize}
 
 \paragraph{Pain-points}
 

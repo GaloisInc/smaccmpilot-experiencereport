@@ -3,24 +3,22 @@
 Embedded programming involves the lowest levels of software development.  Most
 development is in a low-level language, like C or assembly, and programs
 interact intimately with the hardware directly.  Embedded domain-specific
-languages (EDSLs)~\cite{} are in some sense at the other end of the software
+languages (EDSLs) are in some sense at the other end of the software
 spectrum: they are often embedded (in a different sense of the word!) in
 high-level programming languages such as Haskell or ML, and are used to
 lift the abstraction level for programmers.
 
 While the abstraction levels are quite different, there is no in principle
-reason why EDSLs cannot be used for embedded programming; this report
-is about our experience in building new EDSLs for embedded programming and the
-benefits and difficulties in using them.  Our case-study is building a new
-secure autopilot from the ground up.
-
-The breadth and scope of the project sets it apart.  The term `autopilot'
-actually understates the software system built; SMACCMPilot's use of EDSLs
-includes not just the core flight control algorithms, but also device drivers,
-encrypted network stack, mode logic, and concurrency and task management.  In
-all, our project involved some \ph{XXX} lines of Haskell-hosted EDSL code that
-generates \ph{YYY} lines of embedded C.  It is one of the largest and most
-embedded system developed using the EDSL approach.
+reason why EDSLs cannot be used for embedded programming; this report is about
+our experience in building new EDSLs for embedded programming and the benefits
+and difficulties in using them.  Our experiences are based on synthesizing a
+nearly 50 thousand lines of code (kloc) autopilot from our EDSLs.  The breadth
+and scope of the project sets it apart.  The term `autopilot' actually
+understates the software system built; SMACCMPilot's use of EDSLs includes not
+just the core flight control algorithms, but also device drivers, encrypted
+network stack, mode logic, and concurrency and task management.  It is one of
+the largest (open-source) embedded systems projects developed using the EDSL
+approach.
 
 Our story is a largely positive one: we developed the languages and their (EDSL)
 compilers from scratch in approximately \ph{XXX} engineer-months then we used
@@ -35,18 +33,21 @@ developing new EDSLs for low-level programming as well as practitioners
 considering using EDSLs.
 
 
-\lp{Indeed, a number of
-researchers have explored EDSLs for generating embedded C code, such as
-Atom~cite{}, Feldspar~\cite{}, Copilot~\cite{}, \lp{more}.  However, these
-languages are still at the application level
-}
+%% \lp{Indeed, a number of researchers have explored EDSLs for generating embedded
+%%   C code, such as Atom~cite{}, Feldspar~\cite{}, Copilot~\cite{}, \lp{more}.
+%%   However, these languages are still at the application level }
 
-\lp{In this experience report, we describe lessons learned in the use of EDSLs to
-build a complex embedded system: a secure autopilot called
-\emph{SMACCMPilot}.\footnote{\emph{SMACCM} is an acronym for Secure
-  Mathematically-Assured Composition of Control Models.}
-}
+%% \lp{In this experience report, we describe lessons learned in the use of EDSLs to
+%% build a complex embedded system: a secure autopilot called
+%% \emph{SMACCMPilot}.\footnote{\emph{SMACCM} is an acronym for Secure
+%%   Mathematically-Assured Composition of Control Models.}
+%% }
 
-\paragraph{Outline}
-\lp{Outline}
-
+\paragraph{Roadmap}
+In Sections~\ref{sec:ivory} and~\ref{sec:tower}, we give a tour of the two EDSLs
+we have developed in this project: Ivory, for synthesizing safe embedded C code,
+and Tower, for synthesizing synchronous and asynchronous communicating
+processes.  Using these languages, we have developed the SMACCMPilot autopilot,
+described in Section~\ref{sec:smaccmpilot}.  We describe our more general
+``lessons learned'' in Section~\ref{sec:thegood}, which apply generally to EDSLs
+for embedded systems.
