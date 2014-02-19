@@ -13,9 +13,9 @@ reason why EDSLs cannot be used for embedded programming; this report is about
 our experience in building new EDSLs for embedded programming and the benefits
 and difficulties in using them.  Our experiences are based on synthesizing a
 nearly 50 thousand lines of code (kloc) autopilot from our EDSLs.  The breadth
-and scope of the project sets it apart.  The term `autopilot' actually
-understates the software system built; SMACCMPilot's use of EDSLs includes not
-just the core flight control algorithms, but also device drivers, encrypted
+and scope of the project sets it apart.  The autopilot software is not just an
+application, but a complete embedded system: SMACCMPilot's use of EDSLs includes
+not just the core flight control algorithms, but also device drivers, encrypted
 network stack, mode logic, and concurrency and task management.  It is one of
 the largest (open-source) embedded systems projects developed using the EDSL
 approach.
