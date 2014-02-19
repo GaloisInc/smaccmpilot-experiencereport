@@ -42,22 +42,24 @@ read-eval-print-loop (REPL), significantly reducing development time since it
 allows the developer to type-check and test programs without going through the
 full compilation cycle.
 
-C compilers do not have a REPL, and building one, particularly for embedded
+C compilers do not have an interpreter, and building one, particularly for embedded
 hardware, would be a major undertaking requiring a model of the sensors and
 devices the program interacts with, a model of the operating system, as well as
 library code (e.g., glibc).  In short, we are stuck with doing most testing on
 the real hardware.\footnote{An emulator like QEMU~\cite{} does not solve the
   problem: (1) QEMU is not an interpreter, and often it is not useful at all if
-  the application code interacts with sensors and external devices.}
+  the application code interacts with sensors and external devices.}  For
+similar reasons, we do not generally use an interpreter with Ivory (although we
+have built one).
 
 During development, it has slowly become apparent how useful the GHC REPL is for
-embedded development using EDSLs.  As described in Section~\ref{sec:ivory}, we
-have embedded Ivory's type system in Haskell's.  Thus, domain-specific
-type-errors are caught during Haskell type-checking, which can be done within
-the REPL---we do not even have to execute the Haskell code.  The upshot is that
-Ivory programs that would generate unsafe C programs are caught nearly
-instantaneously.  If type-checking passes, we know the generated C will be
-memory-safe.
+embedded development using EDSLs for reporting type-checking errors and other
+static warnings.  As described in Section~\ref{sec:ivory}, we have embedded
+Ivory's type system in Haskell's.  Thus, domain-specific type-errors are caught
+during Haskell type-checking, which can be done within the REPL---we do not even
+have to execute the Haskell code.  The upshot is that Ivory programs that would
+generate unsafe C programs are caught nearly instantaneously.  If type-checking
+passes, we know the generated C will be memory-safe.
 
 In addition, we have found it useful detect potential bugs even if the C
 compiler might detect them.  To take one example, consider unused variable
@@ -71,6 +73,8 @@ type-checking is complete, we are confident that the bug is a logical bug.  We
 do not spend our time chasing segmentation faults or strange undefined or
 compiler-dependent behaviors but rather focus on the bugs result from our
 misunderstanding of the application, not the programming environment.
+
+\lp{PPM type class example}
 
 \paragraph{Plumbing programming}
 The most tedious part of adding many new features to SMACCMPilot is the business
@@ -114,6 +118,145 @@ the language/compiler to eliminate it (or at least to automatically insert
 verification conditions to check for it).  Instead of a growing test-suite, we
 have a growing set of checks in the compiler, to help eliminate both our bugs
 and the bugs in \emph{all} future Ivory programs.
+
+\paragraph{Everything is a library}.  With an EDSL, and particularly a
+    Turing-complete macro language, everything is a library.  The distinction
+    between language developers and users becomes ambiguous.  As an extreme
+    example, one can think of Tower as ``just'' a library for Ivory.  A smaller
+    example is defining a conditional operator in terms of the Ivory
+    if-then-else (\cd{ifte\_}) primitive.  The full definition of \cd{cond\_} is below:
+    \begin{code}
+data Cond eff a = Cond IBool (Ivory eff a)
+
+(==>) :: IBool -> Ivory eff a -> Cond eff a
+(==>) = Cond
+
+cond_ :: [Cond eff ()] -> Ivory eff ()
+cond_ [] = return ()
+cond_ ((Cond b f):cs) = ifte_ b f (cond_ cs)
+    \end{code}
+\noindent
+All types above were introduced in Section~\cite{sec:ivory} with the exception
+of \cd{IBool}, which is the type of a Boolean, in Ivory.  With the \cd{cond\_}
+operator, we can write conditionals like
+\begin{code}
+cond_ [ x >? 100 ==> store result 10
+      , x >? 50  ==> store result 5
+      , true     ==> store result 0 ]
+\end{code}
+\noindent
+instead of
+\begin{code}
+ ifte_ (x >? 100)
+   (store result 10)
+   (ifte_ (x >? 50)
+     (store result 5)
+       (store result 0))
+\end{code}
+
+\paragraph{Simplification is necessary}
+\lp{not sure if this is that interesting}
+%% We wrote a constant folder for Ivory as a ``nice to have'' feature.  
+
+\paragraph{Semantics}
+To take advantage of legacy cross-compilers, we are essentially forced to
+generate C code from our EDSL.  A large focus in designing Ivory is to allow
+expressive but well-defined programs.  We believe Ivory-generated programs
+cannot produce memory-unsafe C programs.  However, undefined C programs can be
+generated from Ivory; for example, signed integer overflow and division-by-zero
+are undefined.  Guaranteeing programs are free from these behaviors is decidable
+(the arithmetic is on fixed-width integer types), but intractable to prove
+automatically.
+
+The behavior of these expressions is \emph{user-defined}.  The Ivory compiler
+automatically inserts predicates into the generated code to check for overflow,
+division-by-zero, etc.  The user defines the behavior of the program if a check
+fails.  For example, during testing, we define the checks to insert a
+breakpoint for use with a debugger.  Another option may to do nothing and rely
+on the semantics provided by the C compiler.  Still another option might be to
+trap to a user-defined exception-handler.
+
+Currently, SMACCMPilot contains approximately 2500 compiler-inserted checks that
+cannot be constant-folded away.  In the future, we hope to \emph{prove} these
+checks never fail.  We have applied the CBMC model-checker~\cite{} and Frama-C's
+abstract interpretation engine~\cite{}, but are wrestling with scalability
+issues.
+
+There are two other semantics categories to consider: defined behavior and
+implementation-defined behavior.  In Ivory, we attempt to eliminate almost all
+implementation-defined behaviors.  For example, only fixed-width size types,
+like \cd{uint8\_t} or \cd{int32\_t} can be generated.  Implementation-defined
+sizes, like \cd{int} or \cd{char} are not available.  We have found these to be
+dangerous: programmers might assume properties about a size type that does not
+hold in a non-standard architecture (e.g., that an \cd{int} is at least 32 bits
+or that \cd{char} is unsigned; both are implementation-defined).  Such
+assumptions are particularly dangerous when porting code between different
+embedded platforms.  Indeed, when we ported portions of ArduPilot, initially built
+for an 8-bit AVR architecture to a 32-bit ARM, we found these sort of implicit
+assumptions.
+
+Finally, even defined behavior is not necessarily intuitive behavior.  For
+example, in C, the defined behavior for arithmetic on values that have a
+size-type smaller than \cd{int} is to implicitly promote them \cd{int}s before
+performing the arithmetic.
+
+For example, given
+\begin{code}
+uint8\_t a = 10;
+uint8\_t b = 250;
+bool    x = a-b > 0;
+bool    y = (uint8\_t)(a-b) > 0;
+\end{code}
+\noindent
+\cd{x} evaluates to 0 and \cd{y} to 1, provided that
+\begin{code}
+sizeof(uint8\_t) < sizeof(int)
+\end{code}
+\noindent
+Most of the time, this behavior is hidden from the user, but it becomes apparent
+on small, embedded architectures.
+
+In Ivory, arithmetic is at the size of the operands, which we believe is more
+intuitive.  We force the generated C to respect this semantics by inserting
+casts into expressions.  So the Ivory expression \cd{a-b} results in the C
+expression \cd{(uint8\_t) (a-b)}.
+
+\paragraph{Syntax}
+Syntax matters.  The importance of syntax is not just a matter of familiarity to
+the user can help make the language better.
+
+We have used Haskell's quasiquoter already to define new syntax
+for defining structs.  For example,
+\begin{code}
+[ivory| struct foo \{ a :: Stored Uint32
+                   ; b :: Array 10 (Stored Sint32)
+                   \} |]
+\end{code}
+\noindent
+is a quasiquoter that defines a struct \cd{foo} with two fields.  The first is
+an unsigned 32-bit integer and the second is an array of 10 signed 32-bit
+integers.  (The \cd{Stored} type constructor tells us that the values are
+allocated in memory.)  The quasiquoter automatically generates selector
+functions that return each field of the struct.  We have a quasiquoter to define
+bit-fields~\cite{high-level}.
+
+We are in the process of defining a quasiquoter for other portions of the
+language.  With a quasiquoter for the statement and expression language, awkward
+monadic constructions can be written more simply.  For example, in Ivory,
+dereferencing a pointer is a monadic action and so is a statement.  However, it
+is pure action, so we can treat it as an expression.  Compare
+
+\lp{finish.  Discuss issues with module system, reflection of function names.
+  Type-checking after parsing.}
+
+\begin{code}
+val <- deref (arr ! 5)
+store (arr ! 5) (val + 1)
+\end{code}
+
+\begin{code}
+arr[5] = arr[5] + 1;
+\end{code}
 
 \paragraph{Safe drivers}
 \ph{worth having a section like this?, tower plus bit-data makes drivers easy.
