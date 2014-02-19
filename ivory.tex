@@ -120,168 +120,164 @@ practical standpoint, doing so demonstrates just how far the type-system has
 come, allowing us to replicate the type safety of compilers like Cyclone,
 etc. without implementing our own type checker.
 
-We do not have space to describe the full embedded type system for Ivory.  To
-give the reader a sense of the type system, we show a portion of the effects
-system and how dangling pointers are prevented in a toy version of the language.
-
-\paragraph{Effects}
-Using the data kinds~\cite{} and type families~\cite{} extensions, we define a
-type-level record to track effects.  Using the data kind extension to lift data
-types to define kinds and types, we define a kind \cd{RetEff} with the type
-\cd{Ret r} denoting that an Ivory code block contains a return statement, and if
-so, the type of the value returned.  If there is no return statement, the
-associated type is \cd{NoRet}.
-\begin{code}
+\begin{figure*}
+  \begin{tabular}{p{0.36\textwidth}|p{0.33\textwidth}|p{0.30\textwidth}}
+    \begin{smcode}
+-- Type-level effects
 data RetEff   = forall r. Ret r | NoRet
-\end{code}
-\noindent
-We similarly define an allocation kind containing types that denote whether
-there is local or global memory allocation as well as the type of the value
-allocated:
-\begin{code}
 data AllocEff = forall s. Scope s | NoAlloc
-\end{code}
-\noindent
-Using type families, we define rewrite rules that are type-level record
-selectors that take a type of kind \cd{Effects} and returns the field (a type)
-of interest:
-\begin{code}
 data Effects  = Effects AllocEff RetEff
 
-type family   GetRet (effs :: Effects) :: RetEff
+-- Type families as record selectors
+type family GetRet (effs :: Effects) :: RetEff
 type instance GetRet (`Effects s r) = r
 
-type family   GetAlloc (effs :: Effects) :: AllocEff
+type family GetAlloc (effs :: Effects) :: AllocEff
 type instance GetAlloc (`Effects s r) = s
-\end{code}
-\noindent
-(The tick mark disambiguates whether we use a term to denote a type or kind;
-with the tick, it is used as a type.)  Our ``record approach'' allows us to
-encode an arbitrary number of effects in a single type.  In Ivory, there is an
-additional effect tracking the use of \cd{break} statements.
 
-For convenience, we define a type synonym corresponding to effects for a C
-function: it should contain a return statement and there may be memory
-allocation:
-\begin{code}
-type FnEffects s r = `Effects (Scope s) (Ret r)
-\end{code}
+-- Helper for function effects
+type FnEffects s r =
+  `Effects (Scope s) (Ret r)
 
-\paragraph{Ivory Type Checking}
-Ivory is a monadic language.  In demonstrating type-checking, the monad
-implementation is not important except to note that it is parameterized by an
-effects parameter.  (In practice, the Ivory monad is a writer transformer (to
-record statements) over the state monad (to generate fresh names).  For our
-purposes, here, we can use the identity monad.)
-\begin{code}
-newtype Ivory (eff :: Effects) a = Ivory ...
+-- Ivory monad
+newtype Ivory (eff :: Effects) a = Ivory (...)
   deriving Monad
-\end{code}
-\noindent
-Now we define a data type \cd{Body r} that contains the body of a Ivory
-function.
-\begin{code}
+
+-- Function body constructor
 newtype Body r = Body
-  \{ runBody :: forall s. Ivory (FnEffects s r) () \}
-\end{code}
-\noindent
-Its type parameter corresponds to the type of the value returned.  Using rank~2
-quantification, we ensure the allocation type cannot escape.
+  \{ runBody :: forall s.
+       Ivory (FnEffects s r) () \}
+    \end{smcode} &
 
-We now have the machinery to define an Ivory statement.  \cd{ret} corresponds to
-the \cd{return} statement in C:
-\begin{code}
-ret :: (GetRet eff \(\sim\) Ret r) => r -> Ivory eff ()
-ret r = undefined
-\end{code}
-\noindent
-The function \cd{ret} takes a value and returns a monadic action.  Note the
-type-equality constraint that ensures that the \cd{Ret} field of the type-level
-record equals \cd{Ret r}, corresponding to the value returned.  (Again, in this
-model we do not care about the implementation of the function.)
+    \begin{smcode}
+-- Memory References
+data RefScope =
+  Global | forall s. Stack s
 
-Now we can write an Ivory program such as
-\begin{code}
-i0 :: Body Integer
-i0 = Body (ret 42)
-\end{code}
-\noindent
-Or to model returning \cd{void},
-\begin{code}
-i1 :: Body ()
-i1 = Body (ret ())
-\end{code}
-
-Let us add a little more machinery to model allocation.  Again using the data
-kinds extension, we define the kind \cd{RefScope} containing two types that
-denote the scope of allocation.
-\begin{code}
-data RefScope = Global | forall s. Stack s
-\end{code}
-\noindent
-A reference is a pointer that is guaranteed by construction to be non-null.  The
-type constructor's first parameter is the scope of the reference and the second
-is the type of the value referenced.  (In the actual implementation, \cd{a} is a
-type with kind \cd{Area}, denoting all the types that can be allocated.)
-\begin{code}
 data Ref (ref :: RefScope) a = Ref
-\end{code}
-\noindent
-In our model, we provide a trivial value constructor \cd{Ref}.
 
+-- The Tiny-Ivory language
+ret :: (GetRet eff \(\sim\) Ret r)
+    => r -> Ivory eff ()
+ret r = ...
 
-Now we can define an operator to allocate stack-based memory.
-\begin{code}
 local :: (GetAlloc eff \(\sim\) Scope s)
       => Ivory eff (Ref (Stack s) a)
-local = undefined
-\end{code}
-\noindent
-Just like with the \cd{ret} statement, there is a type equality constraint, but
-the Ivory return type is a reference to a stack-allocated value.  The return
-type, together with the rank-2 definition of \cd{Body}, ensures we cannot return
-a stack-allocated reference created inside a function body.  (Again, we do not
-care about the implementation.  Furthermore, in Ivory, \cd{local} takes an
-initializer as an argument.
+local = ...
 
-We need one more operator to dereference pointers.
-\begin{code}
 deref :: Ref ref a -> Ivory eff a
-deref ref = undefined
-\end{code}
-\noindent
-The \cd{deref} operator takes a reference and returns the referenced value.
+deref ref = ...
 
-Now we can define Ivory programs that allocate a local value, dereference it,
-and then return the value, which is memory safe:
-\begin{code}
+    \end{smcode} &
+    \begin{smcode}
+-- Example Ivory programs
+i0 :: Body Integer
+i0 = Body (ret 42)
+
+i1 :: Body ()
+i1 = Body (ret ())
+
 i2 :: Body r
 i2 = Body $ do
   l <- local
   v <- deref l
   ret v
-\end{code}
-%% $
 
-We can also pass a stack-allocated reference to a function, work with it
-(including storing new values in the memory area), and then return the reference:
-\begin{code}
-i3 :: Ref (Stack s) a -> Body (Ref (Stack s) a)
+i3 :: Ref (Stack s) a
+   -> Body (Ref (Stack s) a)
 i3 l = Body $ do
   v <- deref l
   ...
   ret l
-\end{code}
-% $
 
-However, returning a reference created locally is a type-error:
-\begin{code}
-i4 = Body (ret =<< local)
-\end{code}
-%% $
-\noindent
-No possible type can be given to \cd{i4}.  The ``closest'' type is something
-like
+-- Type error!
+-- i4 = Body (ret =<< local)
+\end{smcode}
+  \end{tabular}
+  \caption{Tiny-Ivory}
+  \label{fig:tiny-ivory}
+\end{figure*}
+
+We do not have space to describe the full embedded type system for Ivory.  In
+Figure~\ref{fig:tiny-ivory} we present Tiny-Ivory, a model of Ivory focused on
+demonstrating its effects system and how we guarantee no dangling pointers to
+locally-allocated memory.
+
+\paragraph{Effects}
+The effects system for Ivory is shown in the first column of
+Figure~\ref{fig:tiny-ivory}.  Using the data kinds~\cite{datakinds} and type
+families~\cite{typefamilies} extensions, we define a type-level record to track
+effects.  Using the data kind extension to lift data types to define kinds and
+types, we define a kind \cd{RetEff} with the type \cd{Ret r} denoting that an
+Ivory code block contains a return statement, and if so, the type of the value
+returned.  If there is no return statement, the associated type is \cd{NoRet}.
+We similarly define an allocation kind containing types that denote whether
+there is local or global memory allocation as well as the type of the value
+allocated.  Using type families, we define rewrite rules that are type-level
+record selectors that take a type of kind \cd{Effects} and returns the field (a
+type) of interest.  (The tick mark disambiguates whether we use a term to denote
+a type or kind; with the tick, it is used as a type.)  The approach of faking
+type-level records allows us to encode an arbitrary number of effects in a
+single type.  (In real Ivory, there is an additional effect tracking the use of
+\cd{break} statements, and additional effects can be added in the future.)
+
+For convenience, we define a type synonym \cd{FnEffects} corresponding to
+effects for a C function: it should contain a return statement and there may be
+memory allocation.
+
+\paragraph{The Tiny-Ivory Language}
+Ivory is a monadic language.  In demonstrating type-checking, the monad
+implementation is not important except to note that it is parameterized by an
+effects parameter.  (In practice, the Ivory monad is a writer transformer (to
+record statements) over the state monad (to generate fresh names).  For the
+purposes of defining Tiny-Ivory, the identity monad will do.
+
+In the first column of Figure~\ref{fig:tiny-ivory} is the \cd{Body} data~type
+that encapsulates the monadic value implementing the body of an Ivory function.
+Its type parameter corresponds to the type of the value returned.  Using rank~2
+quantification, we ensure the allocation type cannot escape, as we will see shortly.
+
+We now have the machinery to define some Tiny-Ivory statements.  Here, we care
+only about the types of statements, so we will leave them undefined---the value
+$\bot$ is a fine implementation.  The statement \cd{ret} corresponds to the
+\cd{return} statement in C.  Note that \cd{ret} always returns \cd{()}; do not
+confuse monadic return and a return statement inside the DSL.  The type-equality
+constraint that ensures that the \cd{Ret} field of the type-level record equals
+\cd{Ret r}, corresponding to the value returned.
+
+We can already write some Tiny-Ivory programs!  Observe in column three of
+Figure~\ref{sec:tiny-ivory} the program \cd{i0} that returns an integer and
+\cd{i1} that models returning void in C.
+
+Let us add a little more machinery to model memory allocation and reference.
+Returning to column~two, and again using the data kinds extension, we define the
+kind \cd{RefScope} containing two types that denote the scope of allocation;
+global, or stack, respectively.  The \cd{Stack} type is parameterized.
+
+A value with the type \cd{Ref} is a reference: that is, a pointer that is
+guaranteed by construction to be non-null.  The type constructor's first
+parameter is the scope of the reference and the second is the type of the value
+referenced.  (In the actual implementation, the type parameter of \cd{Ref} has
+kind \cd{Area}, denoting all the types that can be allocated.)  In Tiny-Ivory,
+we provide a trivial value constructor to define the data type.
+
+Now we can define a \cd{local} to stack-allocate memory as well as \cd{deref} to
+dereference a pointer.  Regarding \cd{local}, just like with the \cd{ret}
+statement, there is a type equality constraint; this constraint ensures that the
+current effects permit scope allocation.  Local returns a pointer to the
+initialized memory (in Tiny-Ivory, we have omitted initializers for local
+allocation).  \cd{deref} is simpler; it returns the value pointed to by a
+reference.
+
+An example using these statements is program \cd{i2} allocates a local value,
+dereference it, and then return the value, which is memory safe.  As \cd{i3}
+demonstrates, we can also pass a stack-allocated reference to a function, work
+with it (including storing new values in the memory area), and then return the
+reference, which is also memory safe.
+
+What we cannot do, is return a locally-allocated reference, like in program
+\cd{i4}.  No possible type can be given to \cd{i4}.  The ``closest'' type is
+something like
 \begin{code}
 Body (Ref (Stack x) a)
 \end{code}
@@ -290,13 +286,15 @@ But the type variable \cd{x} must unify with the universally quantified
 \cd{s} in the type of the argument to the value constructor \cd{Body}, which is
 not possible.  Note that if the type of \cd{local} were instead
 \begin{code}
-(GetAlloc eff \(\sim\) Scope s) => Ivory eff (Ref Global a)
+Ivory eff (Ref Global a)
 \end{code}
 \noindent
-The program \cd{i3} would be well-typed as
+The program \cd{i4} would be well-typed as
 \begin{code}
 Body (Ref Global a)
 \end{code}
+\noindent
+The typing rules to prevent dangling pointers are reminiscent of behavior STMonad~\cite{stmonad}.
 
 \begin{code}
 foo3 :: Def (`[Ref s (Array 10 (Stored Uint32))] :-> ())
@@ -306,6 +304,8 @@ foo3 = proc "foo" $ \textbackslash{}arr -> body $ do
     store (arr ! ix) (v+1)
 \end{code}
 %% $
+
+\lp{change effects}
 
 \lp{A small Ivory example?}
 \lp{Ivory compiler size?  implementation (front-end, back-end, opts, etc.)}
