@@ -7,7 +7,7 @@ years, start by designing a new programming language and compiler from the
 ground up.
 
 Of course, developing an EDSL is not the same as developing a stand-alone
-compiler.  Much of the typical compiler tool-chain, like the front-end
+compiler.  Much of the typical compiler tool-chain, such as the front-end
 parser/lexer, is obviated.  Furthermore, we were confident that time spent in
 writing the EDSL would be made up by developing in a high-level functional
 language with a rich set of existing libraries.
@@ -37,10 +37,10 @@ Regarding the expressiveness, Ivory has a number of features:
 
 \begin{compactitem}
   \item \emph{Memory-areas}: stack-based allocation of data~\cite{memareas}.
-  \item \emph{Product types}: C structs and well-typed getters.
+  \item \emph{Product types}: C structs with well-typed accessors.
   \item \emph{FFI}: typed interfaces for calling arbitrary C functions.
-  \item \emph{Module system}: managing dependencies to support C-level headers and
-    includes.
+  \item \emph{Module system}: managing dependencies to support C-level headers
+    and includes.
   \item \emph{Bit-fields}: support for typed manipulation of bit-fields and
     registers~\cite{high-level}.
 \end{compactitem}
