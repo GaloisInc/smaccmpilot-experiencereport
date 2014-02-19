@@ -8,6 +8,7 @@
 \caption[SMACCMPilot software architecture]{Overview of SMACCMPilot
 software architecture. Tasks are shown as white boxes, channels as arrows,
 hardware components as black boxes.}
+\label{fig:smaccmpilotSwArch}
 \end{figure}
 
 \ph{There are different font sizes in the figure}
@@ -32,17 +33,13 @@ microcontroller, and higher level drivers to interface with the on-board
 sensors, external motor controllers, and external radio transcievers. The flight
 control software is primarily responsible for reading the sensors, estimating
 the vehicle's attitude and position using sensor fusion, calculating control
-outputs, and sending motor power commands to the motor controllers. This inner
-control loop is scheduled for hard real time deadlines at 200hz\ph{why is this
-rate interesting to the reader?}. Higher level
-control loops manage navigation, and an encrypted command, control, and
-telemetry link interprets ground station instructions, sends system state to
-the operator, and permits online tuning of control loop parameters.\ph{for
-  the paragraph above, i'd include a smaccmpilot diagram and describe, at a
-  high-level the different component groups.  I'd try to be more specific to get
-a sense of the complexity of the system and the results achieved.}
+outputs, and sending motor power commands to the motor controllers.  Higher
+level control loops manage navigation, and an encrypted command, control, and
+telemetry link interprets ground station instructions, sends system state to the
+operator, and permits online tuning of control loop parameters. More details are
+shown in Figure \ref{fig:smaccmpilotSwArch}.
 
-SMACCMPilot is a reasonably complex piece of embedded software.  SMACCMPilot has
+The result is a reasonably complex piece of embedded software.  SMACCMPilot has
 30 tasks connected by 47 channels, and 57 globally shared state variables. (Most
 of the shared state variables are control loop tuning parameters which can be
 read and written over the telemetry link). Not all of these 30 tasks and 47
@@ -50,7 +47,7 @@ channels are strictly requried - as a software architecture, we often use tasks
 as a unit of program composition, but from the prespective of scheduling, it is
 probably possible to collapse many of these tasks into one.
 
-SMACCMPilot is the result of approximately XXX man-years of development. At the
+SMACCMPilot is the result of approximately \ph{XXX} man-years of development. At the
 time of writing, the low level drivers for the system were written first in C
 and then transliterated to Ivory, the sensor fusion and control loops from the
 existing open source ArduPilot project were imported, then slowly replaced piece
