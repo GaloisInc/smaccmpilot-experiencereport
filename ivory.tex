@@ -113,12 +113,12 @@ pursue option (2).  (We discuss the issues of finding errors early on in more
 detail in Section~\ref{}.)
 
 Our hypothesis when developing Ivory was that the type-level extensions to the
-version of Haskell supported by the Glasgow Haskell Compiler~\cite{} \lp{cite
-  Hasochism Connor McBride paper} make it feasible to embed the type-checks
-necessary to ensure memory-safe C programming into the type system.  From a
-practical standpoint, doing so demonstrates just how far the type-system has
-come, allowing us to replicate the type safety of compilers like Cyclone,
-etc. without implementing our own type checker.
+version of Haskell supported by the Glasgow Haskell Compiler~\cite{dephaskell}
+make it feasible to embed the type-checks necessary to ensure memory-safe C
+programming into the type system.  From a practical standpoint, doing so
+demonstrates just how far the type-system has come, allowing us to replicate the
+type safety of compilers like Cyclone, etc. without implementing our own type
+checker.
 
 \begin{figure*}
   \begin{tabular}{p{0.36\textwidth}|p{0.33\textwidth}|p{0.30\textwidth}}
@@ -148,7 +148,6 @@ newtype Body r = Body
   \{ runBody :: forall s.
        Ivory (FnEffects s r) () \}
     \end{smcode} &
-
     \begin{smcode}
 -- Memory References
 data RefScope =
@@ -305,8 +304,7 @@ foo3 = proc "foo" $ \textbackslash{}arr -> body $ do
 \end{code}
 %% $
 
-\lp{change effects}
-
+\lp{how to change effects}
 \lp{A small Ivory example?}
 \lp{Ivory compiler size?  implementation (front-end, back-end, opts, etc.)}
 
