@@ -1,36 +1,37 @@
 \section{Introduction}
 
-Embedded programming involves the lowest levels of software development.  Most
-development is in a low-level language, like C or assembly, and programs
-interact intimately with the hardware directly.  Embedded domain-specific
-languages (EDSLs) are in some sense at the other end of the software
-spectrum: they are often embedded (in a different sense of the word!) in
-high-level programming languages such as Haskell or ML, and are used to
-lift the abstraction level for programmers.
+Embedded programming involves the lowest levels of abstraction.  Most development
+is in low-level languages, like C or assembly, and programs interact intimately
+with the hardware.  Embedded domain-specific languages (EDSLs) are in
+some sense at the other end of the software spectrum: they are often embedded
+(in a different sense of the word!) in high-level programming languages such as
+Haskell or ML, and are used to lift the abstraction level for programmers.
 
-While the abstraction levels are quite different, there is no in principle
-reason why EDSLs cannot be used for embedded programming; this report is about
-our experience in building new EDSLs for embedded programming and the benefits
-and difficulties in using them.  Our experiences are based on synthesizing a
-nearly 50 thousand lines of code (kloc) autopilot from our EDSLs.  The breadth
-and scope of the project sets it apart.  The autopilot software is not just an
-application, but a complete embedded system: SMACCMPilot's use of EDSLs includes
-not just the core flight control algorithms, but also device drivers, encrypted
-network stack, mode logic, and concurrency and task management.  It is one of
-the largest (open-source) embedded systems projects developed using the EDSL
-approach.
+That said, there is no in-principle reason why EDSLs cannot be used for embedded
+programming; this report is about our experience in building new EDSLs for
+embedded programming and the benefits and difficulties in using them.  Our
+experiences are based on synthesizing a nearly 50 thousand lines of code (kloc)
+autopilot called SMACCMPilot from our EDSLs.  The breadth and scope of the
+project sets it apart.  The autopilot software is not just an application, but a
+complete embedded system that includes not just the core flight control
+algorithms, but also device drivers, encrypted network stack, mode logic, and
+concurrency and task management.  It is one of the largest (open-source)
+embedded systems projects developed using the EDSL approach.
 
 Our story is a largely positive one: we developed the languages and their (EDSL)
 compilers from scratch in approximately \ph{XXX} engineer-months then we used
 them to build SMACCMPilot in another \ph{YYY} engineer-months.  We achieved a
-dramatic increase in productivity.  Furthermore, we achieved an increase in
-code quality; our generated C code is free from memory-safety errors.
+dramatic increase in productivity as well as code quality.  By construction, the
+generated C is free from most errors possible in writing C.
 
 Our goal in this paper is to summarize some of our lessons-learned.  While we
 use specific examples, the lessons apply more generally to industrially-large
 embedded system design in EDSLs.  Our target audience includes both researchers
 developing new EDSLs for low-level programming as well as practitioners
 considering using EDSLs.
+
+All of the EDSLs described herein as well as SMACCMPilot itself is open-source
+and documented at \url{smaccmpilot.org}.
 
 
 %% \lp{Indeed, a number of researchers have explored EDSLs for generating embedded

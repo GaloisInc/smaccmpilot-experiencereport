@@ -13,13 +13,11 @@ writing the EDSL would be made up by developing in a high-level functional
 language with a rich set of existing libraries.
 
 The language we developed for generating safe embedded C code is called
-\emph{Ivory}.  Ivory shares the goal of other ``safe-C'' programming languages
-like Cyclone~\cite{cyclone}, BitC~\cite{bitc}, Rust~\cite{rust}, and the work on
-bit-data and memory areas in functional programming~\cite{high-level,memareas}.
-Cyclone and BitC are no longer actively supported.  While Rust is actively
-supported, our main motivation for not using it is to have the benefits of an
-EDSL and particularly our desire for a Turing-complete, type-safe macro-language
-to improve our productivity.
+\emph{Ivory}.  Ivory shares the goal of other ``safe-C'' standalone languages
+and compilers like Cyclone~\cite{cyclone}, BitC~\cite{bitc}, and
+Rust~\cite{rust}.  Our main motivation for not using these languages is to have
+the benefits of an EDSL and particularly our desire for a Turing-complete,
+type-safe macro-language to improve our productivity.
 
 There have also been some ``safe-C'' EDSLs including Atom~\cite{atom},
 Copilot~\cite{copilot}, and FeldSpar~\cite{feldspar1}.  The most significant
@@ -36,11 +34,12 @@ its expressiveness and our approach to type-safety.
 Regarding the expressiveness, Ivory has a number of features:
 
 \begin{compactitem}
-  \item \emph{Memory-areas}: stack-based allocation of data~\cite{memareas}.
+  \item \emph{Memory-areas}: the ability to allocate stack-based memory and
+    manipulate both local and global memory areas~\cite{memareas}.
   \item \emph{Product types}: C structs with well-typed accessors.
   \item \emph{FFI}: typed interfaces for calling arbitrary C functions.
-  \item \emph{Module system}: managing dependencies to support C-level headers
-    and includes.
+  %% \item \emph{Module system}: managing dependencies to support C-level headers
+  %%   and includes.
   \item \emph{Bit-fields}: support for typed manipulation of bit-fields and
     registers~\cite{high-level}.
 \end{compactitem}
@@ -73,8 +72,8 @@ guarantees necessary, for our restricted form of C, are that
   \item null pointers are never dereferenced;
   \item array indexing occurs only within the memory allocated to
     the array;
-  \item no dangling pointers; in particular, a function should not return a
-    pointer to memory allocated within its own stack frame.
+  \item no dangling pointers are possible; in particular, a function should not
+    return a pointer to memory allocated within its own stack frame.
 \end{compactitem}
 
 \noindent
@@ -91,7 +90,6 @@ There are three kinds of effects tracked:
   \item \emph{Break effects}: whether a program contains a \cd{break}
     statement.
 \end{compactitem}
-
 \noindent
 Tracking allocation effects helps in reasoning about memory usage, but the main
 benefit is to reason about data provenance for pointers: pointers into a stack
@@ -101,7 +99,6 @@ current block or returning from a function.  Such effects are particularly
 dangerous in the context of an EDSL in which programs are generated and
 manipulated heavily in the host language.
 
-\subsection{Type checking}
 In an EDSL, we have two options for type checking: (1) write a domain-specific
 type-checker \emph{in} Haskell (relying on Haskell's type-system just for
 macro-level type-checking), or (2) embed the domain-specific type checker into
@@ -113,9 +110,9 @@ pursue option (2).  (We discuss the issues of finding errors early on in more
 detail in Section~\ref{}.)
 
 Our hypothesis when developing Ivory was that the type-level extensions to the
-version of Haskell supported by the Glasgow Haskell Compiler~\cite{dephaskell}
-make it feasible to embed the type-checks necessary to ensure memory-safe C
-programming into the type system.  From a practical standpoint, doing so
+version of Haskell supported by the Glasgow Haskell Compiler make it feasible to
+embed the type-checks necessary to ensure memory-safe C programming into the
+type system~\cite{dephaskell}.  From a practical standpoint, doing so
 demonstrates just how far the type-system has come, allowing us to replicate the
 type safety of compilers like Cyclone, etc. without implementing our own type
 checker.
@@ -227,7 +224,7 @@ memory allocation.
 \paragraph{The Tiny-Ivory Language}
 Ivory is a monadic language.  In demonstrating type-checking, the monad
 implementation is not important except to note that it is parameterized by an
-effects parameter.  (In practice, the Ivory monad is a writer transformer (to
+effects parameter.  (The Ivory monad is a writer transformer (to
 record statements) over the state monad (to generate fresh names).  For the
 purposes of defining Tiny-Ivory, the identity monad will do.
 
@@ -293,7 +290,8 @@ The program \cd{i4} would be well-typed as
 Body (Ref Global a)
 \end{code}
 \noindent
-The typing rules to prevent dangling pointers are reminiscent of behavior STMonad~\cite{stmonad}.
+The typing rules to prevent dangling pointers are reminiscent of behavior
+STMonad~\cite{stmonad}.
 
 \begin{code}
 foo3 :: Def (`[Ref s (Array 10 (Stored Uint32))] :-> ())

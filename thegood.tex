@@ -1,72 +1,66 @@
 \section{Lessons Learned}
 \label{sec:thegood}
 
-In this section, we discuss some of the surprising benefits and challenges of
+In this section, we discuss some of the benefits and challenges of
 using EDSLs for embedded programming, focusing on those that were surprising to
 us, despite our teams' previous experience in functional programming and
 embedded development.
 
 Our experience using Ivory and Tower to build SMACCMPilot has been an exteme
 lesson in dog-fooding EDSLs.  We had multiple developers writing the compilers
-and using them to build applications concurrently.  There were real-time
-dependencies in our development.  For example, some of the authors (who shall
-remain nameless!)  introduced compiler bugs discovered by application
-developers.  The compiler bug had to be fixed in real-time.
-
-We learned a few lessons that are relevant to dog-fooding any compiler
-development but particularly relevant to EDSL development giving the fast
-development time.
+and using them to build applications concurrently.  We learned a few lessons
+that are relevant to dog-fooding any compiler development but particularly
+relevant to EDSL development.
 
 \paragraph{Type-checking as interpretation}
-Build times are non-trivial for large software systems.  (Some of our kernel
-developers at Galois are known to have novels on hand to read during the build
-and test cycle.)  At the time of writing, a fresh build of SMACCMPilot and
-associated test programs is over seven minutes of real time (and 12~minutes of
-CPU time since we have a multi-threaded build system).  One reason the build
-time is so large is that it requires Cabal (the Haskell package manager) to
-discover library dependencies and install packages, compile the Haskell sources,
-and then compile the C sources.  As well, some sources are compiled multiple
-times for different targets (e.g., tests on multiple operating systems).
+Build times are non-trivial for large software systems.  At the time of writing,
+a fresh build of SMACCMPilot and associated test programs is over seven minutes
+of real time (and 12~minutes of CPU time since we have a multi-threaded build
+system).  One reason the build time is so large is that it requires Cabal (the
+Haskell package manager) to discover library dependencies and install packages,
+compile the Haskell sources, and then compile the C sources.  As well, some
+sources are compiled multiple times for different targets on
+multiple operating systems.
 
 Then, to execute the software on the embedded device, we have to write the
-software to the device's memory (we refer to this as ``flashing'' the device,
-since the executable is stored in non-volatile flash memory on a number of
-microcontrollers).  Flashing can take many seconds.
+software to the device's memory via a JTAG, over serial using a bootloader, or
+by some other means.  writing the software can take several seconds.
 
 All this is to say that the end-to-end debug cycle might mean only testing a
 handful of changes per hour.  Clearly, the debug cycle in embedded development
 particularly motivates us to make fewer bugs and to discover them early.
 
-Compilers for high-level languages like Haskell, such as GHC, generally have a
-read-eval-print-loop (REPL), significantly reducing development time since it
-allows the developer to type-check and test programs without going through the
-full compilation cycle.
+%% Compilers for high-level languages like Haskell, such as GHC, generally have a
+%% read-eval-print-loop (REPL), significantly reducing development time since it
+%% allows the developer to type-check and test programs without going through the
+%% full compilation cycle.
 
-C compilers do not have an interpreter, and building one, particularly for embedded
-hardware, would be a major undertaking requiring a model of the sensors and
-devices the program interacts with, a model of the operating system, as well as
-library code (e.g., glibc).  In short, we are stuck with doing most testing on
-the real hardware.\footnote{An emulator like QEMU~\cite{} does not solve the
-  problem: (1) QEMU is not an interpreter, and often it is not useful at all if
-  the application code interacts with sensors and external devices.}  For
-similar reasons, we do not generally use an interpreter with Ivory (although we
-have built one).
+%% C compilers do not have an interpreter, and building one, particularly for
+%% embedded hardware, would be a major undertaking requiring a model of the
+%% sensors and devices the program interacts with, a model of the operating
+%% system, as well as library code (e.g., glibc).  In short, we are stuck with
+%% doing most testing on the real hardware.\footnote{An emulator like
+%% QEMU~\cite{} does not solve the problem: (1) QEMU is not an interpreter, and
+%% often it is not useful at all if the application code interacts with sensors
+%% and external devices.}  For similar reasons, we do not generally use an
+%% interpreter with Ivory (although we have built one).
 
-During development, it has slowly become apparent how useful the GHC REPL is for
-embedded development using EDSLs for reporting type-checking errors and other
-static warnings.  As described in Section~\ref{sec:ivory}, we have embedded
-Ivory's type system in Haskell's.  Thus, domain-specific type-errors are caught
-during Haskell type-checking, which can be done within the REPL---we do not even
-have to execute the Haskell code.  The upshot is that Ivory programs that would
-generate unsafe C programs are caught nearly instantaneously.  If type-checking
-passes, we know the generated C will be memory-safe.
+During development, it slowly become apparent how useful Haskell type-checking
+is for embedded development is.  As described in Section~\ref{sec:ivory}, we
+have embedded Ivory's type system in Haskell's.  Thus, domain-specific
+type-errors are caught during Haskell type-checking.  Type-checking, and other
+static warnings reported by GHC, is nearly instantaneous via the interpreter
+since it can be done on a module-by-module basis.  The upshot is that Ivory
+programs that would generate unsafe C programs are caught nearly
+instantaneously.  If type-checking passes, we know the generated C will be
+memory-safe.
 
 In addition, we have found it useful detect potential bugs even if the C
 compiler might detect them.  To take one example, consider unused variable
 declarations.  While a C compiler can detect this, perhaps late in the
-compilation phase, we discover these warnings nearly instantaneously as a
-warning the GHC REPL.  Moreover, the more preprocessing we can do in Haskell,
-the more potential errors we may find.
+compilation phase, we discover these warnings nearly instantaneously during type
+checking.  Moreover, the more preprocessing we can do in Haskell, the more
+potential errors we may find.
 
 Not all bugs can be detected during type-checking.  For the most part, once
 type-checking is complete, we are confident that the bug is a logical bug.  We
@@ -87,26 +81,28 @@ inter-task communication errors.
 
 Stepping back, the idea that plumbing arguments to Haskell functions is the
 hardest part of embedded development is amazing.  We are not dealing with bugs
-in low-level OS interfaces, we are not dealing mistakes timing errors in
-communication, we are not dealing with type-errors like you might find in raw C
-(where data might be case to \cd{void} or \cd{char[]}.
+in low-level OS interfaces, we are not making timing errors in communication, we
+are not dealing with type-errors like you might find in raw C (where data might
+be case to \cd{void} or \cd{char[]}.
 
 Because plumbing is so easy, it encourages us to improve modularity in the
 system.  Defining a new RTOS task is easy, so we might as well modularize
 functionality to improve isolation and security.  For example, in the ground
 station communication subsystem, encryption and decryption are each executed in
-isolated tasks, simplifying the architectural analysis of the system.
+isolated tasks, simplifying the architectural analysis of the system.  As
+reported in Section~\ref{sec:smaccmpilot}, our system is significantly more
+modular than other autopilots.
 
 \paragraph{Control your compiler}
 If we were writing our application in a typical compiled language, even a
-high-level one, and found such a bug in the compiler, we would perhaps file a
-bug report with the developers... and wait.  If we had access to the sources, we
+high-level one, and found such a compiler bug, we would perhaps file a bug
+report with the developers... and wait.  If we had access to the sources, we
 might try making a change, but doing so risks introducing new bugs or at the
-least, forking.  Most likely, the compiler would not change, and we’d either
-make some \emph{ad-hoc} work-around or introduce regression tests to make sure
-that the specific bug found is not hit again.  Such a situation is notorious in
-embedded cross-compilers that usually have a small support team and are
-themselves many revisions behind the main compiler tool-chain.
+least, forking the compiler.  Most likely, the compiler would not change, and we
+would either make some \emph{ad-hoc} work-around or introduce regression tests
+to make sure that the specific bug found is not hit again.  Such a situation is
+notorious in embedded cross-compilers that usually have a small support team and
+are themselves many revisions behind the main compiler tool-chain.
 
 But with an EDSL, the situation is different.  With a small code-base
 implementing the compiler, it’s easy to write new passes or inspect passes for
@@ -154,8 +150,13 @@ instead of
        (store result 0))
 \end{code}
 
-\paragraph{Simplification is necessary}
-\lp{not sure if this is that interesting}
+\noindent
+Because macros are so easy to define and natural in EDSL development, our
+biggest challenge is ensuring developers on our team put useful ones in a
+standard library, to be shared.
+
+%% \paragraph{Simplification is necessary}
+%% \lp{not sure if this is that interesting}
 %% We wrote a constant folder for Ivory as a ``nice to have'' feature.  
 
 \paragraph{Semantics}
@@ -168,24 +169,23 @@ are undefined.  Guaranteeing programs are free from these behaviors is decidable
 (the arithmetic is on fixed-width integer types), but intractable to prove
 automatically.
 
-The behavior of these expressions is \emph{user-defined}.  The Ivory compiler
-automatically inserts predicates into the generated code to check for overflow,
-division-by-zero, etc.  The user defines the behavior of the program if a check
-fails.  For example, during testing, we define the checks to insert a
-breakpoint for use with a debugger.  Another option may to do nothing and rely
-on the semantics provided by the C compiler.  Still another option might be to
-trap to a user-defined exception-handler.
+To assist the programmer, the Ivory compiler automatically inserts predicates
+into the generated code to check for overflow, division-by-zero, etc.  The user
+defines the behavior of the program if a check fails.  For example, during
+testing, we define the checks to insert a breakpoint for use with a debugger.
+Another option may to do nothing and rely on the semantics provided by the C
+compiler.  Still another option might be to trap to a user-defined
+exception-handler.
 
-Currently, SMACCMPilot contains approximately 2500 compiler-inserted checks that
-cannot be constant-folded away.  In the future, we hope to \emph{prove} these
-checks never fail.  We have applied the CBMC model-checker~\cite{} and Frama-C's
-abstract interpretation engine~\cite{}, but are wrestling with scalability
-issues.
+Currently, SMACCMPilot contains approximately 2500 compiler-inserted non-trivial
+(i.e., cannot be constant-folded away) checks.  In the future, we hope to
+\emph{prove} these checks never fail.  We have used model-checking in a limited
+fashion, but naively applied, it does not scale to the size of SMACCMPilot.
 
 There are two other semantics categories to consider: defined behavior and
 implementation-defined behavior.  In Ivory, we attempt to eliminate almost all
 implementation-defined behaviors.  For example, only fixed-width size types,
-like \cd{uint8\_t} or \cd{int32\_t} can be generated.  Implementation-defined
+like \cd{uint8\_t} or \cd{int32\_t}, can be generated.  Implementation-defined
 sizes, like \cd{int} or \cd{char} are not available.  We have found these to be
 dangerous: programmers might assume properties about a size type that does not
 hold in a non-standard architecture (e.g., that an \cd{int} is at least 32 bits
