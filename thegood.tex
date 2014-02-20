@@ -115,42 +115,51 @@ verification conditions to check for it).  Instead of a growing test-suite, we
 have a growing set of checks in the compiler, to help eliminate both our bugs
 and the bugs in \emph{all} future Ivory programs.
 
-\paragraph{Everything is a library}.  With an EDSL, and particularly a
-    Turing-complete macro language, everything is a library.  The distinction
-    between language developers and users becomes ambiguous.  As an extreme
-    example, one can think of Tower as ``just'' a library for Ivory.  A smaller
-    example is defining a conditional operator in terms of the Ivory
-    if-then-else (\cd{ifte\_}) primitive.  The full definition of \cd{cond\_} is below:
-    \begin{code}
-data Cond eff a = Cond IBool (Ivory eff a)
+\paragraph{Everything is a library}.
 
-(==>) :: IBool -> Ivory eff a -> Cond eff a
+\begin{figure}
+  \begin{tabular}{p{0.5\columnwidth}|p{0.5\columnwidth}}
+    \begin{smcode}
+data Cond eff a =
+  Cond IBool (Ivory eff a)
+
+(==>) :: IBool -> Ivory eff a
+      -> Cond eff a
 (==>) = Cond
 
-cond_ :: [Cond eff ()] -> Ivory eff ()
+cond_ :: [Cond eff ()]
+      -> Ivory eff ()
 cond_ [] = return ()
-cond_ ((Cond b f):cs) = ifte_ b f (cond_ cs)
-    \end{code}
-\noindent
-All types above were introduced in Section~\cite{sec:ivory} with the exception
-of \cd{IBool}, which is the type of a Boolean, in Ivory.  With the \cd{cond\_}
-operator, we can write conditionals like
-\begin{code}
-cond_ [ x >? 100 ==> store result 10
-      , x >? 50  ==> store result 5
-      , true     ==> store result 0 ]
-\end{code}
-\noindent
-instead of
-\begin{code}
- ifte_ (x >? 100)
-   (store result 10)
-   (ifte_ (x >? 50)
-     (store result 5)
-       (store result 0))
-\end{code}
+cond_ ((Cond b f):cs) =
+  ifte_ b f (cond_ cs)
+    \end{smcode} &
+    \begin{smcode}
+cond_
+  [ x >? 100 ==> ret 10
+  , x >? 50  ==> ret 5
+  , true     ==> ret 0 ]
 
-\noindent
+ifte_ (x >? 100)
+ (ret 10)
+ (ifte_ (x >? 50)
+   (ret 5)
+     (ret 0))
+    \end{smcode}
+  \end{tabular}
+  \caption{Conditional Ivory macro.}
+  \label{fig:ivory-cond}
+\end{figure}
+
+With an EDSL, and particularly a Turing-complete macro language, everything is a
+library.  The distinction between language developers and users becomes
+ambiguous.  As an extreme example, one can think of Tower as ``just'' a library
+for Ivory.  A smaller example is defining a conditional operator in terms of
+Ivory's if-then-else primitive as shown in Figure~\ref{fig:ivory-cond}.  All
+types above were introduced in Section~\cite{sec:ivory} with the exception of
+\cd{IBool}, which is the type of a Boolean, in Ivory.  With the \cd{cond\_}
+operator, we can replace nested if-then-else statements as shown in the figure
+with more convenient conditionals, without modifying the language.
+
 Because macros are so easy to define and natural in EDSL development, our
 biggest challenge is ensuring developers on our team put useful ones in a
 standard library, to be shared.
