@@ -120,39 +120,32 @@ checker.
 \begin{figure*}
   \begin{tabular}{p{0.38\textwidth}|p{0.32\textwidth}|p{0.30\textwidth}}
     \begin{smcode}
--- Type-level effects
 data RetEff   = forall r. Ret r | NoRet
 data AllocEff = forall s. Scope s | NoAlloc
 data Effects  = Effects AllocEff RetEff
 
--- Type families as record selectors
 type family GetRet (effs :: Effects) :: RetEff
 type instance GetRet (`Effects s r) = r
 
 type family GetAlloc (effs :: Effects) :: AllocEff
 type instance GetAlloc (`Effects s r) = s
 
--- Helper for function effects
 type FnEffects s r =
   `Effects (Scope s) (Ret r)
 
--- Ivory monad
 newtype Ivory (eff :: Effects) a = Ivory (...)
   deriving Monad
 
--- Function body constructor
 newtype Body r = Body
   \{ runBody :: forall s.
        Ivory (FnEffects s r) () \}
     \end{smcode} &
     \begin{smcode}
--- Memory References
 data RefScope =
   Global | forall s. Stack s
 
 data Ref (ref :: RefScope) a = Ref
 
--- The Tiny-Ivory language
 ret :: (GetRet eff \(\sim\) Ret r)
     => r -> Ivory eff ()
 ret r = ...
@@ -166,7 +159,6 @@ deref ref = ...
 
     \end{smcode} &
     \begin{smcode}
--- Example Ivory programs
 i0 :: Body Integer
 i0 = Body (ret 42)
 
@@ -185,9 +177,6 @@ i3 l = Body $ do
   v <- deref l
   ...
   ret l
-
--- Type error!
--- i4 = Body (ret =<< local)
 \end{smcode}
   \end{tabular}
   \caption{Tiny-Ivory}
@@ -271,9 +260,14 @@ demonstrates, we can also pass a stack-allocated reference to a function, work
 with it (including storing new values in the memory area), and then return the
 reference, which is also memory safe.
 
-What we cannot do, is return a locally-allocated reference, like in program
-\cd{i4}.  No possible type can be given to \cd{i4}.  The ``closest'' type is
-something like
+However, returning a locally-allocated reference, which is not memory-safe, is a
+type-error:
+\begin{code}
+i4 = Body (ret =<< local)
+\end{code}
+\noindent
+No possible type can be given to \cd{i4}.  The ``closest'' type is something
+like
 \begin{code}
 Body (Ref (Stack x) a)
 \end{code}
