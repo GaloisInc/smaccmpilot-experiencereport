@@ -62,9 +62,6 @@ compilation phase, we discover these warnings nearly instantaneously during type
 checking.  Moreover, the more preprocessing we can do in Haskell, the more
 potential errors we may find.
 
-
-\lp{PPM type class example?}
-
 \paragraph{Plumbing programming}
 The most tedious part of adding many new features to SMACCMPilot is the business
 logic in Tower: defining a new task, and then ``plumbing'' all the communication
@@ -224,8 +221,6 @@ In Ivory, arithmetic is at the size of the operands, which we believe is more
 intuitive.  We force the generated C to respect this semantics by inserting
 casts into expressions.  So the Ivory expression \cd{a-b} results in the C
 expression \cd{(uint8\_t) (a-b)}.
-
-\lp{syntax/quasiquoter section?}
 
 %% \paragraph{Syntax}
 %% Syntax matters.  The importance of syntax is not just a matter of familiarity to
