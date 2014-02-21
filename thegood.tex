@@ -68,7 +68,7 @@ do not spend our time chasing segmentation faults or strange undefined or
 compiler-dependent behaviors but rather focus on the bugs result from our
 misunderstanding of the application, not the programming environment.
 
-\lp{PPM type class example}
+\lp{PPM type class example?}
 
 \paragraph{Plumbing programming}
 The most tedious part of adding many new features to SMACCMPilot is the business
@@ -230,42 +230,44 @@ intuitive.  We force the generated C to respect this semantics by inserting
 casts into expressions.  So the Ivory expression \cd{a-b} results in the C
 expression \cd{(uint8\_t) (a-b)}.
 
-\paragraph{Syntax}
-Syntax matters.  The importance of syntax is not just a matter of familiarity to
-the user can help make the language better.
+\lp{syntax/quasiquoter section?}
 
-We have used Haskell's quasiquoter already to define new syntax
-for defining structs.  For example,
-\begin{code}
-[ivory| struct foo \{ a :: Stored Uint32
-                   ; b :: Array 10 (Stored Sint32)
-                   \} |]
-\end{code}
-\noindent
-is a quasiquoter that defines a struct \cd{foo} with two fields.  The first is
-an unsigned 32-bit integer and the second is an array of 10 signed 32-bit
-integers.  (The \cd{Stored} type constructor tells us that the values are
-allocated in memory.)  The quasiquoter automatically generates selector
-functions that return each field of the struct.  We have a quasiquoter to define
-bit-fields~\cite{high-level}.
+%% \paragraph{Syntax}
+%% Syntax matters.  The importance of syntax is not just a matter of familiarity to
+%% the user can help make the language better.
 
-We are in the process of defining a quasiquoter for other portions of the
-language.  With a quasiquoter for the statement and expression language, awkward
-monadic constructions can be written more simply.  For example, in Ivory,
-dereferencing a pointer is a monadic action and so is a statement.  However, it
-is pure action, so we can treat it as an expression.  Compare
+%% We have used Haskell's quasiquoter already to define new syntax
+%% for defining structs.  For example,
+%% \begin{code}
+%% [ivory| struct foo \{ a :: Stored Uint32
+%%                    ; b :: Array 10 (Stored Sint32)
+%%                    \} |]
+%% \end{code}
+%% \noindent
+%% is a quasiquoter that defines a struct \cd{foo} with two fields.  The first is
+%% an unsigned 32-bit integer and the second is an array of 10 signed 32-bit
+%% integers.  (The \cd{Stored} type constructor tells us that the values are
+%% allocated in memory.)  The quasiquoter automatically generates selector
+%% functions that return each field of the struct.  We have a quasiquoter to define
+%% bit-fields~\cite{high-level}.
 
-\lp{finish.  Discuss issues with module system, reflection of function names.
-  Type-checking after parsing.}
+%% We are in the process of defining a quasiquoter for other portions of the
+%% language.  With a quasiquoter for the statement and expression language, awkward
+%% monadic constructions can be written more simply.  For example, in Ivory,
+%% dereferencing a pointer is a monadic action and so is a statement.  However, it
+%% is pure action, so we can treat it as an expression.  Compare
 
-\begin{code}
-val <- deref (arr ! 5)
-store (arr ! 5) (val + 1)
-\end{code}
+%% \lp{finish.  Discuss issues with module system, reflection of function names.
+%%   Type-checking after parsing.}
 
-\begin{code}
-arr[5] = arr[5] + 1;
-\end{code}
+%% \begin{code}
+%% val <- deref (arr ! 5)
+%% store (arr ! 5) (val + 1)
+%% \end{code}
+
+%% \begin{code}
+%% arr[5] = arr[5] + 1;
+%% \end{code}
 
 %% \paragraph{Safe drivers}
 %% \ph{worth having a section like this?,

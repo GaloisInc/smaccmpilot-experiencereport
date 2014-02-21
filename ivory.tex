@@ -287,14 +287,15 @@ Body (Ref Global a)
 The typing rules to prevent dangling pointers are reminiscent of behavior
 STMonad~\cite{stmonad}.
 
-\begin{code}
-foo3 :: Def (`[Ref s (Array 10 (Stored Uint32))] :-> ())
-foo3 = proc "foo" $ \textbackslash{}arr -> body $ do
-  arrayMap $ \textbackslash{}ix -> do
-    v <- deref (arr ! ix)
-    store (arr ! ix) (v+1)
-\end{code}
-%% $
+
+%% \begin{code}
+%% foo3 :: Def (`[Ref s (Array 10 (Stored Uint32))] :-> ())
+%% foo3 = proc "foo" $ \textbackslash{}arr -> body $ do
+%%   arrayMap $ \textbackslash{}ix -> do
+%%     v <- deref (arr ! ix)
+%%     store (arr ! ix) (v+1)
+%% \end{code}
+%% %% $
 
 \lp{how to change effects}
 \lp{A small Ivory example?}
