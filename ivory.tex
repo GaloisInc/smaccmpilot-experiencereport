@@ -10,7 +10,9 @@ Of course, developing an EDSL is not the same as developing a stand-alone
 compiler.  Much of the typical compiler tool-chain, such as the front-end
 parser/lexer, is obviated.  Furthermore, we were confident that time spent in
 writing the EDSL would be made up by developing in a high-level functional
-language with a rich set of existing libraries.
+language with a rich set of existing libraries. It took approximately 6
+engineer-months to create the Ivory language and compiler, and total of about
+6000 lines of Haskell code.
 
 The language we developed for generating safe embedded C code is called
 \emph{Ivory}.  Ivory shares the goal of other ``safe-C'' standalone languages
@@ -298,9 +300,6 @@ STMonad~\cite{stmonad}.
 %% %% $
 
 \lp{how to change effects}
-\lp{A small Ivory example?}
-\lp{Ivory compiler size?  implementation (front-end, back-end, opts, etc.)}
-
 
 %% Memory-allocated types have a distinct kind.  The benefit of doing so is that
 %% type classes with methods operating on memory areas are defined closed under .
