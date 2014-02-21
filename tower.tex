@@ -1,6 +1,40 @@
 \section{Tower: from Functions to Architectures}
 \label{sec:tower}
 
+\begin{figure*}
+  \begin{tabular}{p{0.32\textwidth}|p{0.38\textwidth}|p{0.30\textwidth}}
+    \begin{smcode}
+
+blink :: Channel (Stored IBool)
+      -> Task ()
+blink chan = do
+  tx <- withChannelEmitter chan "bTx"
+  onPeriod period (body tx period)
+  where
+  period = 100 :: Integer
+    \end{smcode} & \begin{smcode}
+body :: Channel (Stored IBool)
+     -> Integer
+     -> Uint32
+     -> Ivory eff ()
+body tx period currTime = emitV\_ tx (even currTime)
+  where
+  even = currTime .\% (2*p) <? p
+  p    = fromIntegral period
+    \end{smcode} & \begin{smcode}
+app :: Tower ()
+app = do
+  ch <- channel
+  task "sender" (blink ch)
+  task "receiver" $ do
+    onChannelV ch $ \textbackslash{}lit -> do
+      ifte\_ lit (turnOn light)
+                (turnOff light)
+    \end{smcode}
+  \end{tabular}
+  \caption{Tower example}
+\end{figure*}
+
 In a many embedded systems, programmers produce an entire system of software
 that interacts with multiple input and output peripherals concurrently using a
 real-time operating system (RTOS). Typical RTOSes provide just a few low-level
