@@ -2,22 +2,23 @@
 \label{sec:tower}
 
 \begin{figure*}
-  \begin{tabular}{p{0.32\textwidth}|p{0.38\textwidth}|p{0.30\textwidth}}
+  \begin{tabular}{p{0.33\textwidth}|p{0.33\textwidth}|p{0.33\textwidth}}
     \begin{smcode}
 
 blink :: Channel (Stored IBool)
       -> Task ()
 blink chan = do
-  tx <- withChannelEmitter chan "bTx"
+  tx <- withChannelEmitter chan
   onPeriod period (body tx period)
   where
   period = 100 :: Integer
     \end{smcode} & \begin{smcode}
-body :: Channel (Stored IBool)
+body :: Emitter (Stored IBool)
      -> Integer
      -> Uint32
      -> Ivory eff ()
-body tx period currTime = emitV\_ tx (even currTime)
+body tx period currTime =
+  emit\_ tx (even currTime)
   where
   even = currTime .\% (2*p) <? p
   p    = fromIntegral period
@@ -25,14 +26,15 @@ body tx period currTime = emitV\_ tx (even currTime)
 app :: Tower ()
 app = do
   ch <- channel
-  task "sender" (blink ch)
-  task "receiver" $ do
-    onChannelV ch $ \textbackslash{}lit -> do
+  task "blink" (blink ch)
+  task "lightswitch" $ do
+    onChannel ch $ \textbackslash{}lit -> do
       ifte\_ lit (turnOn light)
                 (turnOff light)
     \end{smcode}
   \end{tabular}
-  \caption{Tower example}
+  \caption{Ivory/Tower example}
+  \label{fig:tower-ex}
 \end{figure*}
 
 In a many embedded systems, programmers produce an entire system of software
@@ -98,4 +100,34 @@ These output formats make it possible to visualize, analyze, and automatically
 check properties about the system, without knowing anything about Haskell,
 Ivory, or Tower. This is an important feature when working with teams that may
 not all be literate in Ivory/Tower.
+
+We were pleased by the productivity improvements and correctness guarantees the
+Tower language provided. In all, it took about 4 engineer-months to build Tower,
+and a total of about 3000 lines of Haskell code.
+
+\paragraph{Ivory/Tower example}
+In Figure~\ref{fig:tower-ex} we present a small example of Tower.In the
+example, we define a function \cd{blink} that takes a \cd{Channel (Stored
+IBool)} - that is, a Tower communication channel which contains messages of
+booleans. The definition of \cd{blink} has two statements in the \cd{Task}
+monad. \cd{withChannelEmitter chan} creates an \cd{Emitter (Stored IBool)} from
+the \cd{Channel}, bringing that emmitter into scope for the particular task. The
+second action, `onPeriod`, takes a period (in milliseconds) and an event handler
+of type \cd{Uint32 -> Ivory eff ()}.
+
+The definition of \cd{body}, the handler for the periodic event declared in
+\cd{blink}, produces a fragment of Ivory code. The macro \cd{emit\_ tx} has type
+\cd{IBool -> Ivory eff ()}. Its argument, \cd{even currTime}, calculates whether
+the current time, modulo the period, is even or odd. We must make an \cd{Uint32}
+- Ivory's 32-bit signed integer type - out of \cd{period :: Integer}, with
+\cd{fromIntegral}.
+
+The Tower application \cd{app} has three statements in the \cd{Tower} monad.
+\cd{channel} gives a fresh \cd{Channel}. \cd{task "blink"} instantiates a task
+defined by \cd{blink}, operating on the channel just created. \cd{task
+"lightswitch"} defines another task with an event handler that takes the value
+of the message recieved on the channel, and performs an action depending on
+whether the boolean was true or false. Definitions for \cd{turnOn},
+\cd{turnOff}, and \cd{light} are elided.
+
 
