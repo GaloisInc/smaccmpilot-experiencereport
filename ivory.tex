@@ -16,10 +16,10 @@ engineer-months to create the Ivory language and compiler, and total of about
 
 The language we developed for generating safe embedded C code is called
 \emph{Ivory}.  Ivory shares the goal of other ``safe-C'' standalone languages
-and compilers like Cyclone~\cite{cyclone}, BitC~\cite{bitc}, and
-Rust~\cite{rust}.  Our main motivation for not using these languages is to have
-the benefits of an EDSL and particularly our desire for a Turing-complete,
-type-safe macro-language to improve our productivity.
+and compilers like Cyclone~\cite{cyclone} and Rust~\cite{rust}.  Our main
+motivation for not using these languages is to have the benefits of an EDSL and
+particularly our desire for a Turing-complete, type-safe macro-language to
+improve our productivity.
 
 There have also been some ``safe-C'' EDSLs including Atom~\cite{atom},
 Copilot~\cite{copilot}, and FeldSpar~\cite{feldspar1}.  The most significant
@@ -33,8 +33,7 @@ The essential contributions of Ivory from a programming language perspective are
 its expressiveness and our approach to type-safety.
 
 \paragraph{Expressiveness}
-Regarding the expressiveness, Ivory has a number of features:
-
+Regarding the expressiveness, Ivory has a variety of useful features, including:
 \begin{compactitem}
   \item \emph{Memory-areas}: the ability to allocate stack-based memory and
     manipulate both local and global memory areas~\cite{memareas}.
@@ -68,20 +67,21 @@ size at each use site.  %% An array has the type
 \paragraph{Type-level properties}
 Ivory's domain-specific type checking focuses essentially on guaranteeing memory
 safety and helping the programmer reason about her programs' nonfunctional
-behaviors more easily.  With respect to memory safety, the essential
-guarantees necessary, for our restricted form of C, are that
-\begin{compactitem}
-  \item null pointers are never dereferenced;
-  \item array indexing occurs only within the memory allocated to
-    the array;
-  \item no dangling pointers are possible; in particular, a function should not
-    return a pointer to memory allocated within its own stack frame.
-\end{compactitem}
+behaviors more easily.
 
-\noindent
-Our claim is that for the fragment of C generated, these type checks are
-sufficient to guarantee generated programs are memory safe (a forthcoming paper
-will make this argument explicit).
+%% Our claim is that for the fragment of C generated, these type checks are
+%% sufficient to guarantee generated programs are memory safe (a forthcoming paper
+%% will make this argument explicit).
+
+%% With respect to memory safety, the essential
+%% guarantees necessary, for our restricted form of C, are that
+%% \begin{compactitem}
+%%   \item null pointers are never dereferenced;
+%%   \item array indexing occurs only within the memory allocated to
+%%     the array;
+%%   \item no dangling pointers are possible; in particular, a function should not
+%%     return a pointer to memory allocated within its own stack frame.
+%% \end{compactitem}
 
 In addition, Ivory programs have an \emph{effects} type associated with them.
 There are three kinds of effects tracked:
@@ -109,7 +109,7 @@ Haskell's type checker.
 For a large system such as SMACCMPilot, the development times are substantial.
 Therefore, our goal is to learn about program errors early, motivating us to
 pursue option (2).  (We discuss the issues of finding errors early on in more
-detail in Section~\ref{}.)
+detail in Section~\ref{sec:thegood}.)
 
 Our hypothesis when developing Ivory was that the type-level extensions to the
 version of Haskell supported by the Glasgow Haskell Compiler make it feasible to
@@ -212,7 +212,11 @@ For convenience, we define a type synonym \cd{FnEffects} corresponding to
 effects for a C function: it should contain a return statement and there may be
 memory allocation.
 
-\paragraph{The Tiny-Ivory Language}
+(Although we do not show it here, some combinators in Ivory can reset effects.
+For example, introducing a loop combinator allows \cd{break} statements to be
+used.
+
+\paragraph{Tiny-Ivory}
 Ivory is a monadic language.  In demonstrating type-checking, the monad
 implementation is not important except to note that it is parameterized by an
 effects parameter.  (The Ivory monad is a writer transformer (to
@@ -222,7 +226,8 @@ purposes of defining Tiny-Ivory, the identity monad will do.
 In the first column of Figure~\ref{fig:tiny-ivory} is the \cd{Body} data~type
 that encapsulates the monadic value implementing the body of an Ivory function.
 Its type parameter corresponds to the type of the value returned.  Using rank~2
-quantification, we ensure the allocation type cannot escape, as we will see shortly.
+quantification, we ensure the allocation type cannot escape, reminiscent of the
+STMonad~\cite{stmonad}, as we will see shortly.
 
 We now have the machinery to define some Tiny-Ivory statements.  Here, we care
 only about the types of statements, so we will leave them undefined---the value
@@ -281,13 +286,31 @@ not possible.  Note that if the type of \cd{local} were instead
 Ivory eff (Ref Global a)
 \end{code}
 \noindent
-The program \cd{i4} would be well-typed as
-\begin{code}
-Body (Ref Global a)
-\end{code}
-\noindent
-The typing rules to prevent dangling pointers are reminiscent of behavior
-STMonad~\cite{stmonad}.
+then the program \cd{i4} would be well-typed as \cd{Body (Ref Global a)}.
+
+\paragraph{Ivory example}
+To give the reader a sense of what Ivory looks like, we will sketch how to
+define a simple function.  There are many aspects of the language we do not have
+space to show including structs, bit-data, loops, arrays, assertions, foreign
+functions, etc.
+
+Consider the first column of Figure~\ref{fig:tower-ex}.  The function takes an
+integer and returns an Ivory procedure, which compiles to a C function (the
+integer argument is because the function is part of a larger example, explained
+in the next section).  The types of the arguments to an Ivory procedure are
+recorded in a type-level list: the arguments are a reference to a Boolean and a
+unsigned 32-bit value.  The polymorphic type variable \cd{s} tells us that the
+reference can be to a global or local, and the \cd{Stored} type constructor
+lifts value types to memory area types.  After the infix type constructor
+\cd{:->} is the return type of the function---\cd{void} in this case.  In the
+function's definition, the lambda abstraction corresponds to the two arguments
+of the function.  Our function is simple: it creates a local variable binding
+within the language assigning to \cd{even} the value of an arithmetic
+expression.  The expression takes a current time, which is a multiple of the
+period, and returns whether the current time divided by the period is even or
+odd.  (Operators have a preceding \cd{.} or a following \cd{?} for Boolean
+operators to avoid name-space collision with Haskell operators.)  The result of
+the expression is stored into \cd{res} reference.
 
 
 %% \begin{code}
@@ -299,7 +322,6 @@ STMonad~\cite{stmonad}.
 %% \end{code}
 %% %% $
 
-\lp{how to change effects}
 
 %% Memory-allocated types have a distinct kind.  The benefit of doing so is that
 %% type classes with methods operating on memory areas are defined closed under .

@@ -22,9 +22,9 @@ It includes low-level IO peripheral drivers, an encrypted
 communication protocol stack, and several layers of control systems.
 
 SMACCMPilot runs on open source flight controller hardware from the PX4
-Autopilot project~\cite{px4-proj}. The hardware platform is a custom printed
-circuit board with an ARM Cortex M4 microcontroller and the sensors used to
-determine the orientation and altitude of the vehicle.
+Autopilot project.\footnote{\url{http://pixhawk.org/}} The hardware platform is
+a custom printed circuit board with an ARM Cortex M4 microcontroller and the
+sensors used to determine the orientation and altitude of the vehicle.
 
 
 A simplified software architecture of SMACCMPilot is shown in
@@ -45,10 +45,9 @@ SMACCMPilot was developed alongise the Ivory/Tower tools.  The complete system
 took approximately 22 engineer-months to develop.  The low level drivers for the
 system were written first in C, then transliterated to Ivory as the language
 became mature enough to support them. We built a stack for command, control, and
-telemetry over the MAVLink protocol~\cite{mavlink}, encapsulated in an encrypted
-packet protocol. A few components from the ArduPilot open source project, the
-biggest of which is a 10kloc C++ library for intertial sensor fusion, are still
-used inside SMACCMPilot.
+telemetry, encapsulated in an encrypted packet protocol. A few components from
+the ArduPilot open source project, the biggest of which is a 10kloc C++ library
+for intertial sensor fusion, are still used inside SMACCMPilot.
 
 \paragraph{Complexity comparison}
 The SMACCMPilot application code is 10kloc of Ivory, the board support code
@@ -62,12 +61,11 @@ source flight controller systems.
 
 As an example, we've selected two other systems which have a similar feature set
 and run on similar hardware to SMACCMPilot - the ArduPilot
-project~\cite{apm-proj} and the PX4 Autopilot project~\cite{px4-proj}. Though,
-in both cases, these systems have more high level functionality than
-SMACCMPilot, they both implement all of the low level features to support
-similar (or identical) microcontroller based flight controller boards,
-comparable low level control laws, and implement the same MAVLink telemetry
-protocol.
+project\footnote{\url{http://ardupilot.com/}} and the PX4 project. Though, in
+both cases, these systems have more high level functionality than SMACCMPilot,
+they both implement all of the low level features to support similar (or
+identical) microcontroller based flight controller boards, comparable low level
+control laws, and implement the same MAVLink telemetry protocol.
 
 The ArduPilot project is 60kloc of C++, uses three pseudo-threads (emulated by
 interrupts on processors unsuitable for operating systems), and supports at
