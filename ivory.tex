@@ -155,12 +155,91 @@ single type.
 
 
 \paragraph{Programming Interface}
-Ivory is a monadic language. The Ivory monad is a writer transformer (to record
-statements) over the state monad (to generate fresh names). In demonstrating
-type-checking, the monad implementation is not important except to note that it
-is parameterized by an effects parameter.
 
-TODO extend this
+We implemented several distinct programming interfaces to take care of different
+concerns in the Ivory language.
+
+The basic syntax of Ivory is the statement, which make up all procedures.
+Ivory statements are effectful, we used a traditional a monadic interface.
+Internally, the Ivory monad is a writer transformer (to record
+statements) over the state monad (to generate fresh names). As discussed above,
+the Ivory monad type is parameterized by an effects to restrict effects in
+statements. An example given in Figure~\ref{fig:tower-ex} is explained below.
+
+Ivory supports user-defined sum types, which we call Struct types.  Struct types
+are defined using a quasiquoter\cite{ghc-quasiquoter} interface, where the
+syntax is designed to resemble C structures. The quasiquoter uses Template
+Haskell\cite{ghc-templatehaskell} to define typeclass instances (which would be
+tedious and error prone to define manually) required to use the Struct type in
+Ivory programs. In Figure~\ref{fig:structqq}, the struct quasiquoter is used to
+define the Ivory type \cd{Struct "foo\_struct"}.
+
+\begin{figure}
+    \begin{smcode}
+[ivory|
+struct foo\_struct
+  \{ bar :: Stored Uint8
+  ; baz :: Array 10 (Stored Sint16)
+  \}
+|]
+    \end{smcode}
+  \caption{Ivory Struct type definition}
+  \label{fig:structqq}
+\end{figure}
+
+\begin{figure}
+    \begin{smcode}
+foo\_init :: Def('[]:->())
+foo\_init = proc "foo\_init" $ body $ do
+  store  (fg\_ref ~> bar)      1
+  store ((fg\_ref ~> baz) ! 9) 2
+  where
+  fg\_ref :: Ref Global (Struct "foo\_struct")
+  fg\_ref = addrOf foo\_global
+
+foo\_global :: MemArea (Struct "foo\_struct")
+foo\_global = area "foo\_global" Nothing
+
+foo\_module :: Module
+foo\_module = package "foo\_module" $ do
+  defStruct (Proxy :: Proxy "foo_struct")
+  incl foo\_init
+  defMemArea foo\_global
+    \end{smcode}
+  \caption{Example Ivory module definition}
+  \label{fig:module}
+\end{figure}
+
+One of the most difficult design decisions in the Ivory language was the
+interface for the module system.
+
+The module system was one major language feature Ivory could not inherit from
+it's host language. Because Haskell does not have any mechanism for reflection
+of module contents, the Ivory programmer must create modules explicitly.
+
+In Ivory, procedures and global memory areas are ordinary Haskell values. These,
+along with dependencies, type definitions, and foreign function headers, must be
+listed as the contents of an Ivory module. We use a monadic interface for
+building modules, but the only action supported by this \cd{ModuleM} monad
+is writing: all values have type \cd{ModuleM ()}; essentially it is the same as
+building a list, but with slightly more convenient syntax. The example module
+definition in Figure~\ref{fig:module} shows a module that defines \cd{Struct
+"foo"} from Figure~\ref{fig:structqq}, a function \cd{foo\_init}, and a global
+structure \cd{foo\_global}.
+
+
+Ivory modules are translated to C as a single module at a time. Due to this
+restriction, the compiler cannot guarantee that each module fully describes all
+of its type, function, \& memory area dependencies, because the compilation
+cannot assume any knowledge of the contents of dependencies. This is for good
+reason: since dependencies may be foreign (non-Ivory generated) header files,
+they may not be possible to describe in the Ivory type system.
+
+We did not pursue whole-program compilation, where an entire set of
+interdependent modules could be checked against each other for consistency.
+However, it is possible that changing our approach to the module system would
+permit us to catch errors earlier without undue burden to the programmer. We
+plan to investigate this problem further in the future.
 
 \paragraph{Ivory example}
 To give the reader a sense of what Ivory looks like, we will sketch how to
