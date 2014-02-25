@@ -29,6 +29,29 @@ data-structures and manipulating memory.  Ivory is designed to be a
 general-purpose embedded C EDSL that can be used for memory-manipulation
 intensive programs, such as device drivers.
 
+In an EDSL, we have two options for type checking: (1) write a domain-specific
+type-checker \emph{in} Haskell (relying on Haskell's type-system just for
+macro-language type-checking), or (2) embed the domain-specific type checker
+into Haskell's type checker.
+
+For a large system such as SMACCMPilot, the development times are substantial.
+Therefore, our goal is to learn about program errors early, motivating us to
+pursue option (2). By early, we mean that all Haskell expressions for the Ivory
+language are type checked each time the Haskell source is compiled. Compared to
+option (1) this means a time difference of at least 20 seconds on our
+development machines, but more importantly, it ensures that even dead code that
+is not part of the generated Ivory executable is type correct, and that
+generalized code is type correct for all possible use cases. (We discuss the
+issues of finding errors early on in more detail in Section~\ref{sec:thegood}.)
+
+Our hypothesis when developing Ivory was that the type-level extensions to the
+version of Haskell supported by the Glasgow Haskell Compiler make it feasible to
+embed the type-checks necessary to ensure memory-safe C programming into the
+type system~\cite{dephaskell}.  From a practical standpoint, doing so
+demonstrates just how far the type-system has come, allowing us to replicate the
+type safety of compilers like Cyclone, etc. without implementing our own type
+checker.
+
 The essential contributions of Ivory from a programming language perspective are
 its expressiveness and our approach to type-safety.
 
@@ -45,7 +68,7 @@ Regarding the expressiveness, Ivory has a variety of useful features, including:
     registers~\cite{high-level}.
 \end{compactitem}
 
-As well, Ivory has some limitations, motivated by making analysis simpler to
+We built Ivory with some limitations, motivated by making analysis simpler to
 ensure safe C programs are generated.  Ivory does not support heap-based dynamic
 memory allocation (but global variables can be defined).  C arrays are
 fixed-length.  There is no pointer arithmetic.  Pointers are non-nullable.
@@ -65,6 +88,8 @@ size at each use site.  %% An array has the type
 %% \end{code}
 
 \paragraph{Type-level properties}
+
+
 Ivory's domain-specific type checking focuses essentially on guaranteeing memory
 safety and helping the programmer reason about her programs' nonfunctional
 behaviors more easily.
@@ -101,98 +126,12 @@ current block or returning from a function.  Such effects are particularly
 dangerous in the context of an EDSL in which programs are generated and
 manipulated heavily in the host language.
 
-In an EDSL, we have two options for type checking: (1) write a domain-specific
-type-checker \emph{in} Haskell (relying on Haskell's type-system just for
-macro-level type-checking), or (2) embed the domain-specific type checker into
-Haskell's type checker.
-
-For a large system such as SMACCMPilot, the development times are substantial.
-Therefore, our goal is to learn about program errors early, motivating us to
-pursue option (2).  (We discuss the issues of finding errors early on in more
-detail in Section~\ref{sec:thegood}.)
-
-Our hypothesis when developing Ivory was that the type-level extensions to the
-version of Haskell supported by the Glasgow Haskell Compiler make it feasible to
-embed the type-checks necessary to ensure memory-safe C programming into the
-type system~\cite{dephaskell}.  From a practical standpoint, doing so
-demonstrates just how far the type-system has come, allowing us to replicate the
-type safety of compilers like Cyclone, etc. without implementing our own type
-checker.
-
-\begin{figure*}
-  \begin{tabular}{p{0.38\textwidth}|p{0.32\textwidth}|p{0.30\textwidth}}
-    \begin{smcode}
-data RetEff   = forall r. Ret r | NoRet
-data AllocEff = forall s. Scope s | NoAlloc
-data Effects  = Effects AllocEff RetEff
-
-type family GetRet (effs :: Effects) :: RetEff
-type instance GetRet (`Effects s r) = r
-
-type family GetAlloc (effs :: Effects) :: AllocEff
-type instance GetAlloc (`Effects s r) = s
-
-type FnEffects s r =
-  `Effects (Scope s) (Ret r)
-
-newtype Ivory (eff :: Effects) a = Ivory (...)
-  deriving Monad
-
-newtype Body r = Body
-  \{ runBody :: forall s.
-       Ivory (FnEffects s r) () \}
-    \end{smcode} &
-    \begin{smcode}
-data RefScope =
-  Global | forall s. Stack s
-
-data Ref (ref :: RefScope) a = Ref
-
-ret :: (GetRet eff \(\sim\) Ret r)
-    => r -> Ivory eff ()
-ret r = ...
-
-local :: (GetAlloc eff \(\sim\) Scope s)
-      => Ivory eff (Ref (Stack s) a)
-local = ...
-
-deref :: Ref ref a -> Ivory eff a
-deref ref = ...
-
-    \end{smcode} &
-    \begin{smcode}
-i0 :: Body Integer
-i0 = Body (ret 42)
-
-i1 :: Body ()
-i1 = Body (ret ())
-
-i2 :: Body r
-i2 = Body $ do
-  l <- local
-  v <- deref l
-  ret v
-
-i3 :: Ref (Stack s) a
-   -> Body (Ref (Stack s) a)
-i3 l = Body $ do
-  v <- deref l
-  ...
-  ret l
-\end{smcode}
-  \end{tabular}
-  \caption{Tiny-Ivory}
-  \label{fig:tiny-ivory}
-\end{figure*}
-
-We do not have space to describe the full embedded type system for Ivory.  In
-Figure~\ref{fig:tiny-ivory} we present Tiny-Ivory, a model of Ivory focused on
-demonstrating its effects system and how we guarantee no dangling pointers to
-locally-allocated memory.
+We do not have space to describe the full embedded type system, but hope to do
+so in a forthcoming paper describing the Ivory language.
 
 \paragraph{Effects}
-The effects system for Ivory is shown in the first column of
-Figure~\ref{fig:tiny-ivory}.  Using the data kinds~\cite{datakinds} and type
+
+Using the data kinds~\cite{datakinds} and type
 families~\cite{typefamilies} extensions, we define a type-level record to track
 effects.  Using the data kind extension to lift data types to define kinds and
 types, we define a kind \cd{RetEff} with the type \cd{Ret r} denoting that an
@@ -202,91 +141,26 @@ We similarly define an allocation kind containing types that denote whether
 there is local or global memory allocation as well as the type of the value
 allocated.  Using type families, we define rewrite rules that are type-level
 record selectors that take a type of kind \cd{Effects} and returns the field (a
-type) of interest.  (The tick mark disambiguates whether we use a term to denote
-a type or kind; with the tick, it is used as a type.)  The approach of faking
+type) of interest.
+
+There is an additional effect tracking the use of
+\cd{break} statements, which may optionally appear only inside loop bodies.
+So, some combinators in Ivory can reset effects:
+\cd{break} is not permitted in procedure bodies, but introducing a loop
+combinator allows \cd{break} statements to be used in that body.
+
+The approach of faking
 type-level records allows us to encode an arbitrary number of effects in a
-single type.  (In real Ivory, there is an additional effect tracking the use of
-\cd{break} statements, and additional effects can be added in the future.)
+single type.
 
-For convenience, we define a type synonym \cd{FnEffects} corresponding to
-effects for a C function: it should contain a return statement and there may be
-memory allocation.
 
-(Although we do not show it here, some combinators in Ivory can reset effects.
-For example, introducing a loop combinator allows \cd{break} statements to be
-used.
+\paragraph{Programming Interface}
+Ivory is a monadic language. The Ivory monad is a writer transformer (to record
+statements) over the state monad (to generate fresh names). In demonstrating
+type-checking, the monad implementation is not important except to note that it
+is parameterized by an effects parameter.
 
-\paragraph{Tiny-Ivory}
-Ivory is a monadic language.  In demonstrating type-checking, the monad
-implementation is not important except to note that it is parameterized by an
-effects parameter.  (The Ivory monad is a writer transformer (to
-record statements) over the state monad (to generate fresh names).  For the
-purposes of defining Tiny-Ivory, the identity monad will do.
-
-In the first column of Figure~\ref{fig:tiny-ivory} is the \cd{Body} data~type
-that encapsulates the monadic value implementing the body of an Ivory function.
-Its type parameter corresponds to the type of the value returned.  Using rank~2
-quantification, we ensure the allocation type cannot escape, reminiscent of the
-STMonad~\cite{stmonad}, as we will see shortly.
-
-We now have the machinery to define some Tiny-Ivory statements.  Here, we care
-only about the types of statements, so we will leave them undefined---the value
-$\bot$ is a fine implementation.  The statement \cd{ret} corresponds to the
-\cd{return} statement in C.  Note that \cd{ret} always returns \cd{()}; do not
-confuse monadic return and a return statement inside the DSL.  The type-equality
-constraint that ensures that the \cd{Ret} field of the type-level record equals
-\cd{Ret r}, corresponding to the value returned.
-
-We can already write some Tiny-Ivory programs!  Observe in column three of
-Figure~\ref{fig:tiny-ivory} the program \cd{i0} that returns an integer and
-\cd{i1} that models returning void in C.
-
-Let us add a little more machinery to model memory allocation and reference.
-Returning to column~two, and again using the data kinds extension, we define the
-kind \cd{RefScope} containing two types that denote the scope of allocation;
-global, or stack, respectively.  The \cd{Stack} type is parameterized.
-
-A value with the type \cd{Ref} is a reference: that is, a pointer that is
-guaranteed by construction to be non-null.  The type constructor's first
-parameter is the scope of the reference and the second is the type of the value
-referenced.  (In the actual implementation, the type parameter of \cd{Ref} has
-kind \cd{Area}, denoting all the types that can be allocated.)  In Tiny-Ivory,
-we provide a trivial value constructor to define the data type.
-
-Now we can define a \cd{local} to stack-allocate memory as well as \cd{deref} to
-dereference a pointer.  Regarding \cd{local}, just like with the \cd{ret}
-statement, there is a type equality constraint; this constraint ensures that the
-current effects permit scope allocation.  Local returns a pointer to the
-initialized memory (in Tiny-Ivory, we have omitted initializers for local
-allocation).  \cd{deref} is simpler; it returns the value pointed to by a
-reference.
-
-An example using these statements is program \cd{i2} allocates a local value,
-dereference it, and then return the value, which is memory safe.  As \cd{i3}
-demonstrates, we can also pass a stack-allocated reference to a function, work
-with it (including storing new values in the memory area), and then return the
-reference, which is also memory safe.
-
-However, returning a locally-allocated reference, which is not memory-safe, is a
-type-error:
-\begin{code}
-i4 = Body (ret =<< local)
-\end{code}
-\noindent
-No possible type can be given to \cd{i4}.  The ``closest'' type is something
-like
-\begin{code}
-Body (Ref (Stack x) a)
-\end{code}
-\noindent
-But the type variable \cd{x} must unify with the universally quantified
-\cd{s} in the type of the argument to the value constructor \cd{Body}, which is
-not possible.  Note that if the type of \cd{local} were instead
-\begin{code}
-Ivory eff (Ref Global a)
-\end{code}
-\noindent
-then the program \cd{i4} would be well-typed as \cd{Body (Ref Global a)}.
+TODO extend this
 
 \paragraph{Ivory example}
 To give the reader a sense of what Ivory looks like, we will sketch how to
