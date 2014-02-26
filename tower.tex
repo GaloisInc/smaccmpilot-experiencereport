@@ -131,20 +131,39 @@ representative of a device driver that blinks an LED at the rate of 100 ticks
 simplifications to Tower have been made in the code, eliding details relating to
 code generation and backend selection.
 
-In the third column the program, defined in the \cd{Tower} monad, initializes a
-channel between two tasks as well as the tasks themselves.  A channel, or queue,
-consists of a transmit (\cd{tx}) and receive (\cd{rx}) endpoints, respectively.
-The \cd{blink} task is an RTOS task that will send output to the
-\cd{lightswitch} task, which toggles the LED based on the incoming Boolean
-values.
+Consider the first column of Figure~\ref{fig:tower-ex}.
+The function takes an
+integer and returns an Ivory procedure, which compiles to a C function (the
+integer argument is because the function is part of a larger example, explained
+in the next section).  The types of the arguments to an Ivory procedure are
+recorded in a type-level list: the arguments are a reference to a Boolean and a
+unsigned 32-bit value.  The polymorphic type variable \cd{s} tells us that the
+reference can be to a global or local, and the \cd{Stored} type constructor
+lifts value types to memory area types.  After the infix type constructor
+\cd{:->} is the return type of the function---\cd{void} in this case.  In the
+function's definition, the lambda abstraction corresponds to the two arguments
+of the function.  Our function is simple: it creates a local variable binding
+within the language assigning to \cd{even} the value of an arithmetic
+expression.  The expression takes a current time, which is a multiple of the
+period, and returns whether the current time divided by the period is even or
+odd.  (Operators have a preceding \cd{.} or a following \cd{?} for Boolean
+operators to avoid name-space collision with Haskell operators.)  The result of
+the expression is stored into \cd{res} reference.
 
-The \cd{blink} task is defined in column three.  It takes a channel source and
+The \cd{blink} task is defined in column two.  It takes a channel source and
 returns a program in the \cd{Task} monad.  The task initializes first
 initializes an emitter for the channel then creates a reference to private but
 globally-allocated memory.  Every 100 ticks, an Ivory action is taken.  In this
 case, the action is to make call an Ivory function, the one described in the
 previous section, that toggles that value pointed to by \cd{res}.  This value
 pointed to by \cd{res} is then emitted on the channel.
+
+In the third column the program, defined in the \cd{Tower} monad, initializes a
+channel between two tasks as well as the tasks themselves.  A channel, or queue,
+consists of a transmit (\cd{tx}) and receive (\cd{rx}) endpoints, respectively.
+The \cd{blink} task is an RTOS task that will send output to the
+\cd{lightswitch} task, which toggles the LED based on the incoming Boolean
+values.
 
 %%  controls
 %% the LED.  The \cd{lightswitch} task toggles the 
