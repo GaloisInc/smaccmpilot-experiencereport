@@ -12,14 +12,14 @@ parser/lexer, is provided for free by the host language.  Furthermore, we were
 confident that time spent in writing the EDSL would be made up by developing in
 a high-level functional language with a rich set of existing libraries. It took
 approximately 6 engineer-months to create the Ivory language and compiler, and
-total of about 6000 lines of Haskell code.
+total of about 6k lines of Haskell code.
 
 The language we developed for generating safe embedded C code is called
 \emph{Ivory}.  Ivory shares the goal of other ``safe-C'' standalone languages
 and compilers like Cyclone~\cite{cyclone} and Rust~\cite{rust}.  Our main
 motivation for not using these languages is to have the benefits of an EDSL and
-particularly our desire for a Turing-complete, type-safe macro-language to
-improve our productivity.
+particularly our desire for a convenient, Turing-complete, type-safe
+macro-language (Haskell) to improve our productivity.
 
 There have also been some ``safe-C'' EDSLs including Atom~\cite{atom},
 Copilot~\cite{copilot}, and FeldSpar~\cite{feldspar1}.  The most significant
@@ -29,35 +29,12 @@ data-structures and manipulating memory.  Ivory is designed to be a
 general-purpose embedded C EDSL that can be used for memory-manipulation
 intensive programs, such as device drivers.
 
-In an EDSL, we have two options for type checking: (1) write a domain-specific
-type-checker \emph{in} Haskell (relying on Haskell's type-system just for
-macro-language type-checking), or (2) embed the domain-specific type checker
-into Haskell's type checker.
-
-For a large system such as SMACCMPilot, the development times are substantial.
-Therefore, our goal is to learn about program errors early, motivating us to
-pursue option (2). By early, we mean that all Haskell expressions for the Ivory
-language are type checked each time the Haskell source is compiled. Compared to
-option (1) this means a time difference of at least 20 seconds on our
-development machines, but more importantly, it ensures that even dead code that
-is not part of the generated Ivory executable is type correct, and that
-generalized code is type correct for all possible use cases. (We discuss the
-issues of finding errors early on in more detail in Section~\ref{sec:thegood}.)
-
-Our hypothesis when developing Ivory was that the type-level extensions to the
-version of Haskell supported by the Glasgow Haskell Compiler make it feasible to
-embed the type-checks necessary to ensure memory-safe C programming into the
-type system~\cite{dephaskell}.  From a practical standpoint, doing so
-demonstrates just how far the type-system has come, allowing us to replicate the
-type safety of compilers like Cyclone, etc. without implementing our own type
-checker.
-
 The essential contributions of Ivory from a programming language perspective are
 its expressiveness and our approach to type-safety.
 
 \paragraph{Expressiveness}
 Regarding the expressiveness, Ivory has a variety of useful features, including:
-\begin{compactitem}
+\begin{itemize}
   \item \emph{Memory-areas}: the ability to allocate stack-based memory and
     manipulate both local and global memory areas~\cite{memareas}.
   \item \emph{Product types}: C structs with well-typed accessors.
@@ -66,7 +43,7 @@ Regarding the expressiveness, Ivory has a variety of useful features, including:
   %%   and includes.
   \item \emph{Bit-fields}: support for typed manipulation of bit-fields and
     registers~\cite{high-level}.
-\end{compactitem}
+\end{itemize}
 
 We built Ivory with some limitations, motivated by making analysis simpler to
 ensure safe C programs are generated.  Ivory does not support heap-based dynamic
@@ -87,9 +64,7 @@ size at each use site.  %% An array has the type
 %% Array (n::Nat) t
 %% \end{code}
 
-\paragraph{Type-level properties}
-
-
+\paragraph{Type-checking}
 Ivory's domain-specific type checking focuses essentially on guaranteeing memory
 safety and helping the programmer reason about her programs' nonfunctional
 behaviors more easily.
@@ -100,23 +75,23 @@ behaviors more easily.
 
 %% With respect to memory safety, the essential
 %% guarantees necessary, for our restricted form of C, are that
-%% \begin{compactitem}
+%% \begin{itemize}
 %%   \item null pointers are never dereferenced;
 %%   \item array indexing occurs only within the memory allocated to
 %%     the array;
 %%   \item no dangling pointers are possible; in particular, a function should not
 %%     return a pointer to memory allocated within its own stack frame.
-%% \end{compactitem}
+%% \end{itemize}
 
 In addition, Ivory programs have an \emph{effects} type associated with them.
 There are three kinds of effects tracked:
-\begin{compactitem}
+\begin{itemize}
   \item \emph{Allocation effects}: whether a program performs (stack-based)
     memory allocation as well as whether pointers point into global or stack memory.
   \item \emph{Return effects}: whether a program contains a \cd{return} statement.
   \item \emph{Break effects}: whether a program contains a \cd{break}
     statement.
-\end{compactitem}
+\end{itemize}
 \noindent
 Tracking allocation effects helps in reasoning about memory usage, but the main
 benefit is to reason about data provenance for pointers: pointers into a stack
@@ -124,59 +99,71 @@ frame cannot effect global memory.  Return and break statements fundamentally
 effect control-flow and can result in unexpected behavior by breaking out of the
 current block or returning from a function.  Such effects are particularly
 dangerous in the context of an EDSL in which programs are generated and
-manipulated heavily in the host language.
+manipulated heavily in the host language.  Combining allocation and return
+effects, the type system guarantees that a pointer into the stack cannot be
+returned by a function (which is indeed memory-unsafe).
 
-We do not have space to describe the full embedded type system, but hope to do
-so in a forthcoming paper describing the Ivory language.
+In an EDSL, we have at least two options for type checking: (1) write a
+domain-specific type-checker \emph{in} Haskell (relying on Haskell's type-system
+just for macro-language type-checking), or (2) embed the domain-specific type
+checker into Haskell's type checker.
 
-\paragraph{Effects}
+For a large system such as SMACCMPilot, the development times are substantial.
+Therefore, our goal is to learn about program errors early, motivating us to
+pursue option (2). \ph{not sure what is going on here: By early, we mean that
+all Haskell expressions for the Ivory language are type checked each time the
+Haskell source is compiled. Compared to option (1) this means a time difference
+of at least 20 seconds on our development machines, but more importantly, it
+ensures that even dead code that is not part of the generated Ivory executable
+is type correct, and that generalized code is type correct for all possible use
+cases.} (We discuss the issues of finding errors early on in more detail in
+Section~\ref{sec:thegood}.)
 
-Using the data kinds~\cite{datakinds} and type
-families~\cite{typefamilies} extensions, we define a type-level record to track
-effects.  Using the data kind extension to lift data types to define kinds and
-types, we define a kind \cd{RetEff} with the type \cd{Ret r} denoting that an
-Ivory code block contains a return statement, and if so, the type of the value
-returned.  If there is no return statement, the associated type is \cd{NoRet}.
-We similarly define an allocation kind containing types that denote whether
-there is local or global memory allocation as well as the type of the value
-allocated.  Using type families, we define rewrite rules that are type-level
-record selectors that take a type of kind \cd{Effects} and returns the field (a
-type) of interest.
+Our hypothesis when developing Ivory was that recent type-level extensions to the
+version of Haskell implemented by the Glasgow Haskell Compiler make it feasible
+to embed the type-checks necessary to ensure memory-safe C programming into the
+type system~\cite{dephaskell}.  From a practical standpoint, doing so
+demonstrates just how far the type-system has come, allowing us to replicate the
+type safety of compilers like Cyclone, etc.
 
-There is an additional effect tracking the use of
-\cd{break} statements, which may optionally appear only inside loop bodies.
-So, some combinators in Ivory can reset effects:
-\cd{break} is not permitted in procedure bodies, but introducing a loop
-combinator allows \cd{break} statements to be used in that body.
+We do not have space to adequately describe Ivory's type system; we leave that
+to a forthcoming paper.  Here we will note that the embedding depends on the use
+of data kinds~\cite{datakinds}, type families~\cite{typefamilies}, and rank-2
+polymorphism\cite{??}.
 
-The approach of faking
-type-level records allows us to encode an arbitrary number of effects in a
-single type.
+%% we define a type-level record to track effects.  We do not have
+%% space to describe the full embedded type system, but hope to do so in a
+%% forthcoming paper describing the Ivory language.
 
 
-\paragraph{Programming Interface}
+%% \paragraph{Effects}
+%%   Using the data kind extension to lift data types to define kinds and
+%% types, we define a kind \cd{RetEff} with the type \cd{Ret r} denoting that an
+%% Ivory code block contains a return statement, and if so, the type of the value
+%% returned.  If there is no return statement, the associated type is \cd{NoRet}.
+%% We similarly define an allocation kind containing types that denote whether
+%% there is local or global memory allocation as well as the type of the value
+%% allocated.  Using type families, we define rewrite rules that are type-level
+%% record selectors that take a type of kind \cd{Effects} and returns the field (a
+%% type) of interest.
 
-We implemented several distinct programming interfaces to take care of different
-concerns in the Ivory language.
+%% There is an additional effect tracking the use of
+%% \cd{break} statements, which may optionally appear only inside loop bodies.
+%% So, some combinators in Ivory can reset effects:
+%% \cd{break} is not permitted in procedure bodies, but introducing a loop
+%% combinator allows \cd{break} statements to be used in that body.
 
-The basic syntax of Ivory is the statement, which make up all procedures.
-Ivory statements are effectful, we used a traditional a monadic interface.
-Internally, the Ivory monad is a writer transformer (to record
-statements) over the state monad (to generate fresh names). As discussed above,
-the Ivory monad type is parameterized by an effects to restrict effects in
-statements. An example given in Figure~\ref{fig:tower-ex} is explained below.
+%% The approach of faking
+%% type-level records allows us to encode an arbitrary number of effects in a
+%% single type.
 
-Ivory supports user-defined sum types, which we call Struct types.  Struct types
-are defined using a quasiquoter\cite{ghc-quasiquoter} interface, where the
-syntax is designed to resemble C structures. The quasiquoter uses Template
-Haskell\cite{ghc-templatehaskell} to define typeclass instances, which would be
-tedious and error prone to define manually,  required to use the Struct type in
-Ivory programs. In Figure~\ref{fig:structqq}, the struct quasiquoter is used to
-define the Ivory type \cd{Struct "foo\_struct"}. The code generation includes
-the well-typed accessor functions: in this example, the functions \cd{bar ::
-Label "foo\_struct" (Stored Uint8)} and \cd{baz :: Label "foo\_struct" (Array 10
-(Stored Sint16)} are defined for selecting the appropriate fields in any
-reference to a \cd{Struct "foo\_struct"}.
+
+\paragraph{Programmer Interface}
+Ivory has distinct inferfaces for writing monadic program, for defining
+procedures (that are compiled to C functions) to encapsulate programs, for
+defining data structures, and for constructing modules.  We cannot cover all of
+these here, so we focus on the most important, explaining them by way of an
+example.
 
 \begin{figure}
     \begin{smcode}
@@ -184,23 +171,12 @@ reference to a \cd{Struct "foo\_struct"}.
 struct foo\_struct
   \{ bar :: Stored Uint8
   ; baz :: Array 10 (Stored Sint16)
-  \}
-|]
-    \end{smcode}
-  \caption{Ivory Struct type definition}
-  \label{fig:structqq}
-\end{figure}
+  \} |]
 
-\lp{TODO squigglies}
-
-
-\newcommand{\mytilde}{\raise.17ex\hbox{$\scriptstyle\mathtt{\sim}$}}
-\begin{figure}
-    \begin{smcode}
-foo\_init :: Def('[]:->())
+foo\_init :: Def(`[]:->())
 foo\_init = proc "foo\_init" $ body $ do
-  store  (fg\_ref \mytilde{}> bar)      1
-  store ((fg\_ref \mytilde{}> baz) ! 0) 2
+  store  (fg\_ref \(\sim\)> bar)      1
+  store ((fg\_ref \(\sim\)> baz) ! 0) 2
   where
   fg\_ref :: Ref Global (Struct "foo\_struct")
   fg\_ref = addrOf foo\_global
@@ -217,6 +193,39 @@ foo\_module = package "foo\_module" $ do
   \caption{Example Ivory module definition}
   \label{fig:module}
 \end{figure}
+
+
+
+The basic syntax of Ivory is the statement, which make up all procedures.
+Ivory statements are effectful, we used a traditional a monadic interface.
+Internally, the Ivory monad is a writer transformer (to record
+statements) over the state monad (to generate fresh names). As discussed above,
+the Ivory monad type is parameterized by an effects to restrict effects in
+statements. An example given in Figure~\ref{fig:tower-ex} is explained below.
+
+Ivory supports user-defined \ph{product?} sum types, which we call Struct types.
+Struct types are defined using a quasiquoter\cite{ghc-quasiquoter} interface,
+where the syntax is designed to resemble C structures. The quasiquoter uses
+Template Haskell\cite{ghc-templatehaskell} to define typeclass instances, which
+would be tedious and error prone to define manually, required to use the Struct
+type in Ivory programs. In Figure~\ref{fig:structqq}, the struct quasiquoter is
+used to define the Ivory type \cd{Struct "foo\_struct"}. The code generation
+includes the well-typed accessor functions: in this example, the functions
+\cd{bar :: Label "foo\_struct" (Stored Uint8)} and \cd{baz :: Label
+  "foo\_struct" (Array 10 (Stored Sint16)} are defined for selecting the
+appropriate fields in any reference to a \cd{Struct "foo\_struct"}.
+
+%% \begin{figure}
+%%     \begin{smcode}
+%%     \end{smcode}
+%%   \caption{Ivory Struct type definition}
+%%   \label{fig:structqq}
+%% \end{figure}
+
+%% \lp{TODO squigglies}
+
+
+%% \newcommand{\mytilde}{\raise.17ex\hbox{$\scriptstyle\mathtt{\sim}$}}
 
 The module system was one major language feature Ivory could not inherit from
 it's host language. Because Haskell does not have any mechanism for reflection
@@ -279,13 +288,13 @@ plan to investigate this problem further in the future.
 %% names the struct definition.
 
 
-%% \begin{compactitem}
+%% \begin{itemize}
 %% \item Brief overview of Ivory.
 %% \item Note that types are embedded in GHC type-checker.
 %% \item Philosophy: push errors higher into the design cycle (C runtime to C
 %%   compile time to DSL runtime to typechecking time).
 %% \item Insert checks into compiler.  Easy with EDSL  (blog post).
-%% \end{compactitem}
+%% \end{itemize}
 
 
 %% \begin{compactenum}
