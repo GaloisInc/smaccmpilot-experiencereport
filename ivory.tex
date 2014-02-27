@@ -110,14 +110,10 @@ checker into Haskell's type checker.
 
 For a large system such as SMACCMPilot, the development times are substantial.
 Therefore, our goal is to learn about program errors early, motivating us to
-pursue option (2). \ph{not sure what is going on here: By early, we mean that
-all Haskell expressions for the Ivory language are type checked each time the
-Haskell source is compiled. Compared to option (1) this means a time difference
-of at least 20 seconds on our development machines, but more importantly, it
-ensures that even dead code that is not part of the generated Ivory executable
-is type correct, and that generalized code is type correct for all possible use
-cases.} (We discuss the issues of finding errors early on in more detail in
-Section~\ref{sec:thegood}.)
+pursue option (2), to detect errors during type-checking, which is fast and
+modular, rather than after Haskell compilation, when executing the EDSL programs
+to generate C code.  (We discuss the issues of finding errors early on in more
+detail in Section~\ref{sec:thegood}.)
 
 Our hypothesis when developing Ivory was that recent type-level extensions to the
 version of Haskell implemented by the Glasgow Haskell Compiler make it feasible
@@ -159,11 +155,10 @@ polymorphism\cite{??}.
 
 
 \paragraph{Programmer Interface}
-Ivory has distinct inferfaces for writing monadic program, for defining
-procedures (that are compiled to C functions) to encapsulate programs, for
-defining data structures, and for constructing modules.  We cannot cover all of
-these here, so we focus on the most important, explaining them by way of an
-example.
+Ivory has different ``inferfaces'' for writing programs, defining procedures to
+encapsulate programs (and that are compiled to C functions), defining data
+structures, and for constructing modules.  We cannot cover all of these here, so
+we focus on the most central, explaining them by way of an example.
 
 \begin{figure}
     \begin{smcode}
@@ -171,49 +166,123 @@ example.
 struct foo\_struct
   \{ bar :: Stored Uint8
   ; baz :: Array 10 (Stored Sint16)
-  \} |]
+  \}
+|]
 
-foo\_init :: Def(`[]:->())
-foo\_init = proc "foo\_init" $ body $ do
-  store  (fg\_ref \(\sim\)> bar)      1
-  store ((fg\_ref \(\sim\)> baz) ! 0) 2
-  where
-  fg\_ref :: Ref Global (Struct "foo\_struct")
-  fg\_ref = addrOf foo\_global
+foo\_init :: Def(`[Ref s (Struct "foo\_struct")]:-> ())
+foo\_init = proc "foo\_init" $ \textbackslash{}fg\_ref -> body (prgm fg\_ref)
 
-foo\_global :: MemArea (Struct "foo\_struct")
-foo\_global = area "foo\_global" Nothing
+prgm :: Ref s (Struct "foo_struct") -> Ivory eff ()
+prgm fg_ref = do
+  store  (fg_ref \(\sim\)> bar)      1
+  store ((fg_ref \(\sim\)> baz) ! 0) 2
 
 foo\_module :: Module
 foo\_module = package "foo\_module" $ do
   defStruct (Proxy :: Proxy "foo_struct")
   incl foo\_init
-  defMemArea foo\_global
     \end{smcode}
   \caption{Example Ivory module definition}
   \label{fig:module}
 \end{figure}
+%% $
 
+Consider Figure~\ref{fig:module}.  First, we define a struct (or product type)
+using a quasiquoter interface.  Struct \cd{foo\_struct} contains two fields
+consisting of an unsigned byte and an array of 10 signed 16-bit integers.  The
+\cd{Stored} type constructor signifies that the value is allocated
+in-memory~\cite{memareas}.  The \cd{Array} type constructor takes a type-level
+natural number as a parameter (implemented as a Glasgow Haskell Compiler
+extension) to fix the size of an array.
 
+The quasiquoter uses Template Haskell~\cite{th} to generate
+typeclass instances for the defined struct as well as top-level values that are
+field accessors.  For example, for the \cd{bar} field, a label
+\begin{code}
+bar :: Label "foo\_struct" (Stored Uint8),
+bar = Label "bar"
+\end{code}
+\noindent
+is generated.  We describe the use of labels shortly.
 
-The basic syntax of Ivory is the statement, which make up all procedures.
-Ivory statements are effectful, we used a traditional a monadic interface.
-Internally, the Ivory monad is a writer transformer (to record
-statements) over the state monad (to generate fresh names). As discussed above,
-the Ivory monad type is parameterized by an effects to restrict effects in
-statements. An example given in Figure~\ref{fig:tower-ex} is explained below.
+A procedure, corresponding to a C function, has a type of the form
+\begin{code}
+Def (params :-> out)
+\end{code}
+\noindent
+where \cd{params} are the procedure's parameter types and \cd{out} is its return
+type.  The procedure \cd{foo\_init} has a single input and its return type is
+unit, corresponding to the \cd{void} type in C.  The types of the procedure's
+inputs are types in a type-level list (the (\cd{`}) promotes the list value
+constructor to a type constructor~\cite{datakinds}.  The type
+\begin{code}
+Ref s area
+\end{code}
+\noindent
+is the type of a \emph{reference}, or pointer guaranteed to be non-null by
+construction.  A reference type constructor takes a \emph{scope} type and a
+memory-area type.  The possible scope types denote local, or stack-allocated
+scope, or global and statically allocated scope.  In the example, the parameter
+to \cd{foo\_init} can be a reference with either scope.  The memory area pointed
+to be the reference has the type of the struct defined above.
 
-Ivory supports user-defined \ph{product?} sum types, which we call Struct types.
-Struct types are defined using a quasiquoter\cite{ghc-quasiquoter} interface,
-where the syntax is designed to resemble C structures. The quasiquoter uses
-Template Haskell\cite{ghc-templatehaskell} to define typeclass instances, which
-would be tedious and error prone to define manually, required to use the Struct
-type in Ivory programs. In Figure~\ref{fig:structqq}, the struct quasiquoter is
-used to define the Ivory type \cd{Struct "foo\_struct"}. The code generation
-includes the well-typed accessor functions: in this example, the functions
-\cd{bar :: Label "foo\_struct" (Stored Uint8)} and \cd{baz :: Label
-  "foo\_struct" (Array 10 (Stored Sint16)} are defined for selecting the
-appropriate fields in any reference to a \cd{Struct "foo\_struct"}.
+Now we describe the procedure \cd{foo\_init}.  The function \cd{proc} takes a
+string corresponding to the name of the function that will be generated in C,
+then a function from the procedures arguments to its body.  The lambda-bound
+variable \cd{fg\_ref}'s type is
+\begin{code}
+Ref s (Struct "foo\_struct")
+\end{code}
+\noindent
+Before the body of a procedure, the user may add requirements on inputs or
+ensure statements on return values, useful for testing and verification (these
+are not shown in the current example).
+
+The body of the procedure is defined by \cd{prgm}.  Its return type is an Ivory
+monad, returning unit.  The Ivory monad also contains an effects parameter that
+tracks effects, as described above, using a type-level record.
+
+Two statements implement the program, both of which update memory areas.  The
+\cd{store} operator takes a reference and a value, and updates the memory area
+pointed to by the reference with the value.  The struct accessor operator,
+reminiscent of C's \cd{->} operator, has the type
+\begin{code}
+(\(\sim\)>) :: Ref s (Struct symbol)
+      -> Label symbol field -> Ref s field
+\end{code}
+\noindent
+again eliding type class and data-kind constraints.  Note, however, that \cd{\~>}
+returns a reference to the field, not the field value.
+
+The \cd{bar} field of the struct pointed to us updated with 1.  Updating the
+array in \cd{baz} is slightly more complicated since it contains an array. In
+the example, The 0th index of the array in the \cd{baz} field is updated with 2
+(the other indexes are unmodified).
+
+Array indexing is guaranteed to be safe by the type system.  Like arrays,
+indexes into arrays have types that are parameterized by a type-level natural
+number.  An index type \cd{Ix n} only supports indexes from \cd{n} to \cd{n-1}.
+Eliding type-class and data-kind constraints, the type of the index operator
+ensures that the array length and index size match:
+\begin{code}
+(!) :: Ref s (Array len area) -> Ix len -> Ref s area
+\end{code}
+
+The final interface we describe in this example if our module interface.
+A \cd{Module} contains all of the top-level procedures and struct definitions to
+be sent to the compiler.  The module \cd{foo\_module} contains the definition
+for the struct and the implementation of the function.  Because structure names
+are type-level strings which are not \cd{*}-kinded, a proxy type is given to
+turn an arbitrary-kinded type into a \cd{*}-kinded type (which can be passed to
+a function).
+
+%% The basic syntax of Ivory is the statement, which make up all procedures.
+%% Ivory statements are effectful, we used a traditional a monadic interface.
+%% Internally, the Ivory monad is a writer transformer (to record
+%% statements) over the state monad (to generate fresh names). As discussed above,
+%% the Ivory monad type is parameterized by an effects to restrict effects in
+%% statements. An example given in Figure~\ref{fig:tower-ex} is explained below.
+
 
 %% \begin{figure}
 %%     \begin{smcode}
@@ -227,36 +296,36 @@ appropriate fields in any reference to a \cd{Struct "foo\_struct"}.
 
 %% \newcommand{\mytilde}{\raise.17ex\hbox{$\scriptstyle\mathtt{\sim}$}}
 
-The module system was one major language feature Ivory could not inherit from
-it's host language. Because Haskell does not have any mechanism for reflection
-of module contents, the Ivory programmer must create modules explicitly.
+%% The module system was one major language feature Ivory could not inherit from
+%% it's host language. Because Haskell does not have any mechanism for reflection
+%% of module contents, the Ivory programmer must create modules explicitly.
 
-In Ivory, procedures and global memory areas are ordinary Haskell values. These,
-along with dependencies, type definitions, and foreign function headers, must be
-listed as the contents of an Ivory module. We use a monadic interface for
-building modules, but the only action supported by this \cd{ModuleM} monad
-is writing: all values have type \cd{ModuleM ()}; essentially it is the same as
-building a list, but with slightly more convenient syntax. The example module
-in Figure~\ref{fig:module} shows a module \cd{foo\_module} which contains:
-\begin{itemize}
-  \item a type definition of \cd{Struct "foo"}, from Figure~\ref{fig:structqq}
-  \item a function \cd{foo\_init}
-  \item a global memory area \cd{foo\_global}.
-\end{itemize}
-\lp{TODO make sure lists and compact lists are the same}
+%% In Ivory, procedures and global memory areas are ordinary Haskell values. These,
+%% along with dependencies, type definitions, and foreign function headers, must be
+%% listed as the contents of an Ivory module. We use a monadic interface for
+%% building modules, but the only action supported by this \cd{ModuleM} monad
+%% is writing: all values have type \cd{ModuleM ()}; essentially it is the same as
+%% building a list, but with slightly more convenient syntax. The example module
+%% in Figure~\ref{fig:module} shows a module \cd{foo\_module} which contains:
+%% \begin{itemize}
+%%   \item a type definition of \cd{Struct "foo"}, from Figure~\ref{fig:structqq}
+%%   \item a function \cd{foo\_init}
+%%   \item a global memory area \cd{foo\_global}.
+%% \end{itemize}
+%% \lp{TODO make sure lists and compact lists are the same}
 
-Ivory modules are translated to C as a single module at a time. Due to this
-restriction, the compiler cannot guarantee that each module fully describes all
-of its type, function, \& memory area dependencies, because the compilation
-cannot assume any knowledge of the contents of dependencies. This is for good
-reason: since dependencies may be foreign (non-Ivory generated) header files,
-they may not be possible to describe in the Ivory type system.
+%% Ivory modules are translated to C as a single module at a time. Due to this
+%% restriction, the compiler cannot guarantee that each module fully describes all
+%% of its type, function, \& memory area dependencies, because the compilation
+%% cannot assume any knowledge of the contents of dependencies. This is for good
+%% reason: since dependencies may be foreign (non-Ivory generated) header files,
+%% they may not be possible to describe in the Ivory type system.
 
-We did not pursue whole-program compilation, where an entire set of
-interdependent modules could be checked against each other for consistency.
-However, it is possible that changing our approach to the module system would
-permit us to catch errors earlier without undue burden to the programmer. We
-plan to investigate this problem further in the future.
+%% We did not pursue whole-program compilation, where an entire set of
+%% interdependent modules could be checked against each other for consistency.
+%% However, it is possible that changing our approach to the module system would
+%% permit us to catch errors earlier without undue burden to the programmer. We
+%% plan to investigate this problem further in the future.
 
 %% \begin{code}
 %% foo3 :: Def (`[Ref s (Array 10 (Stored Uint32))] :-> ())
