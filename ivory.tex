@@ -11,7 +11,7 @@ compiler.  Much of the typical compiler tool-chain, such as the front-end
 parser/lexer, is provided for free by the host language.  Furthermore, we were
 confident that time spent in writing the EDSL would be made up by developing in
 a high-level functional language with a rich set of existing libraries. It took
-approximately 6 engineer-months to create the Ivory language and compiler, and
+approximately 6 engineer-months to create the language and compiler, and
 total of about 6k lines of Haskell code.
 
 The language we developed for generating safe embedded C code is called
@@ -49,10 +49,10 @@ We built Ivory with some limitations, motivated by making analysis simpler to
 ensure safe C programs are generated.  Ivory does not support heap-based dynamic
 memory allocation (but global variables can be defined).  C arrays are
 fixed-length.  There is no pointer arithmetic.  Pointers are non-nullable.
-Union types are not supported.  Unsafe casts are not supported: casts must to a
-strictly more expressive type (e.g., from an unsigned 8-bit integer to an
-unsigned 16-bit integer) or a default value must be provided that is returned
-for casts otherwise.  In particular, no void-type exists.
+Union types are not supported.  Unsafe casts are not supported: casts must be to
+a strictly more expressive type (e.g., from an unsigned 8-bit integer to an
+unsigned 16-bit integer) or a default value must be provided for when the cast
+is not valid.  In particular, no void-pointer type exists.
 
 In Ivory, these have not been limiting factors, particularly because of the
 power of using Haskell as a macro system.  For example, while arrays must be of
@@ -65,8 +65,8 @@ size at each use site.  %% An array has the type
 %% \end{code}
 
 \paragraph{Type-checking}
-Ivory's domain-specific type checking focuses essentially on guaranteeing memory
-safety and helping the programmer reason about her programs' nonfunctional
+Ivory's domain-specific type checking focuses on guaranteeing memory
+safety and helping programmers reason about their programs' nonfunctional
 behaviors more easily.
 
 %% Our claim is that for the fragment of C generated, these type checks are
@@ -93,20 +93,19 @@ There are three kinds of effects tracked:
     statement.
 \end{itemize}
 \noindent
-Tracking allocation effects helps in reasoning about memory usage, but the main
-benefit is to reason about data provenance for pointers: pointers into a stack
-frame cannot effect global memory.  Return and break statements fundamentally
-effect control-flow and can result in unexpected behavior by breaking out of the
-current block or returning from a function.  Such effects are particularly
-dangerous in the context of an EDSL in which programs are generated and
-manipulated heavily in the host language.  Combining allocation and return
-effects, the type system guarantees that a pointer into the stack cannot be
-returned by a function (which is indeed memory-unsafe).
+Tracking allocation effects allows memory allocation to be restricted and
+tracked.  Return and break statements fundamentally effect control-flow and can
+result in unexpected behavior by breaking out of the current block or returning
+from a function.  Such effects are particularly dangerous in the context of an
+EDSL in which programs are generated and manipulated heavily in the host
+language.  Combining allocation and return effects, the type system guarantees
+that a pointer into the stack cannot be returned by a function (which is indeed
+memory-unsafe).
 
 In an EDSL, we have at least two options for type checking: (1) write a
 domain-specific type-checker \emph{in} Haskell (relying on Haskell's type-system
 just for macro-language type-checking), or (2) embed the domain-specific type
-checker into Haskell's type checker.
+checker into Haskell's type system.
 
 For a large system such as SMACCMPilot, the development times are substantial.
 Therefore, our goal is to learn about program errors early, motivating us to
@@ -115,10 +114,10 @@ modular, rather than after Haskell compilation, when executing the EDSL programs
 to generate C code.  (We discuss the issues of finding errors early on in more
 detail in Section~\ref{sec:thegood}.)
 
-Our hypothesis when developing Ivory was that recent type-level extensions to the
-version of Haskell implemented by the Glasgow Haskell Compiler make it feasible
-to embed the type-checks necessary to ensure memory-safe C programming into the
-type system~\cite{dephaskell}.  From a practical standpoint, doing so
+Our hypothesis when developing Ivory was that recent type-system extensions to
+the version of Haskell implemented by the Glasgow Haskell Compiler make it
+feasible to embed the invariants necessary to ensure memory-safe C programming
+into the type system~\cite{dephaskell}.  From a practical standpoint, doing so
 demonstrates just how far the type-system has come, allowing us to replicate the
 type safety of compilers like Cyclone, etc.
 
@@ -188,7 +187,7 @@ foo\_module = package "foo\_module" $ do
 %% $
 
 Consider Figure~\ref{fig:module}.  First, we define a struct (or product type)
-using a quasiquoter interface.  Struct \cd{foo\_struct} contains two fields
+using a quasiquoter.  Struct \cd{foo\_struct} contains two fields
 consisting of an unsigned byte and an array of 10 signed 16-bit integers.  The
 \cd{Stored} type constructor signifies that the value is allocated
 in-memory~\cite{memareas}.  The \cd{Array} type constructor takes a type-level
@@ -221,10 +220,10 @@ Ref s area
 \noindent
 is the type of a \emph{reference}, or pointer guaranteed to be non-null by
 construction.  A reference type constructor takes a \emph{scope} type and a
-memory-area type.  The possible scope types denote local, or stack-allocated
-scope, or global and statically allocated scope.  In the example, the parameter
-to \cd{foo\_init} can be a reference with either scope.  The memory area pointed
-to be the reference has the type of the struct defined above.
+memory-area type.  The scope type denotes stack-allocated scope, or global and
+statically allocated scope.  In the example, the parameter to \cd{foo\_init} can
+be a reference to either scope.  The memory area pointed to be the reference
+has the type of the struct defined above.
 
 Now we describe the procedure \cd{foo\_init}.  The function \cd{proc} takes a
 string corresponding to the name of the function that will be generated in C,
@@ -239,20 +238,20 @@ ensure statements on return values, useful for testing and verification (these
 are not shown in the current example).
 
 The body of the procedure is defined by \cd{prgm}.  Its return type is an Ivory
-monad, returning unit.  The Ivory monad also contains an effects parameter that
-tracks effects, as described above, using a type-level record.
+expression, returning unit.  The Ivory monad also contains an effects parameter
+that tracks effects, as described above, using a type-level record.
 
 Two statements implement the program, both of which update memory areas.  The
-\cd{store} operator takes a reference and a value, and updates the memory area
-pointed to by the reference with the value.  The struct accessor operator,
+\cd{store} operator takes a reference and a value, and stores the value in the
+the memory area pointed to by the reference.  The struct accessor operator,
 reminiscent of C's \cd{->} operator, has the type
 \begin{code}
 (\(\sim\)>) :: Ref s (Struct symbol)
       -> Label symbol field -> Ref s field
 \end{code}
 \noindent
-again eliding type class and data-kind constraints.  Note, however, that \cd{\~>}
-returns a reference to the field, not the field value.
+again eliding type class and data-kind constraints.  Note, however, that \lp{fix
+this business}\cd{\~>} returns a reference to the field, not the field value.
 
 The \cd{bar} field of the struct pointed to us updated with 1.  Updating the
 array in \cd{baz} is slightly more complicated since it contains an array. In
@@ -261,7 +260,7 @@ the example, The 0th index of the array in the \cd{baz} field is updated with 2
 
 Array indexing is guaranteed to be safe by the type system.  Like arrays,
 indexes into arrays have types that are parameterized by a type-level natural
-number.  An index type \cd{Ix n} only supports indexes from \cd{n} to \cd{n-1}.
+number.  An index type \cd{Ix n} only supports indexes from \cd{0} to \cd{n-1}.
 Eliding type-class and data-kind constraints, the type of the index operator
 ensures that the array length and index size match:
 \begin{code}

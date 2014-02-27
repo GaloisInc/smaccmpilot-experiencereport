@@ -48,7 +48,7 @@ real-time operating system (RTOS). Typical RTOSes provide just a few low-level
 locking and signaling primitives for scheduling. Since microcontrollers do not
 have virtual memory managment units (MMUs) found on larger processors, the RTOS
 kernel can't protect the system against badly behaved user code. These
-restrictions put significant burden on the programmer: she must ensure all tasks
+restrictions put significant burden on programmers: they must ensure all tasks
 and communication between tasks is implemented correctly.
 
 Luckily, we already have Ivory in our toolbox, which guarantees memory-safety of
@@ -79,7 +79,7 @@ the compiler.
 
 In Tower, one specifies tasks and communication channels that generates correct
 Ivory implementations, as well as architecture description artifacts. Tower
-hides the dangerous low-level scheduling primitives to the user, and it keeps
+hides the dangerous low-level scheduling primitives from the user, and keeps
 type information for channels (i.e. the datatype of the channel message),
 expressed as Ivory types, in the Haskell type system.
 
@@ -134,25 +134,25 @@ code generation and backend selection.
 Consider the first column of Figure~\ref{fig:tower-ex}.  The function takes an
 integer and returns an Ivory procedure, which compiles to a C function.  The
 procedure takes two arguments, a reference to a Boolean and a unsigned 32-bit
-value.  The procedure creates a local variable binding within the language,
-assigning to \cd{even} the value of an arithmetic expression.  The expression
+value.  The procedure creates a local variable named \cd{even},
+assigning to it the value of an arithmetic expression.  The expression
 takes a current time, which is a multiple of the period, and returns whether the
 current time divided by the period is even or odd.  (Operators have a preceding
 \cd{.} or a following \cd{?} for Boolean operators to avoid name-space collision
-with Haskell operators.)  The result of the expression is stored into \cd{res}
-reference.
+with Haskell operators.)  The result of the expression is stored into the
+\cd{res} reference.
 
 The \cd{blink} task is defined in column two.  It takes a channel source and
-returns a program in the \cd{Task} monad.  The task initializes first
+returns a program in the \cd{Task} monad.  The task first
 initializes an emitter for the channel then creates a reference to private but
 globally-allocated memory.  Every 100 ticks, an Ivory action is taken.  In this
-case, the action is to make call an Ivory function, the one described in the
+case, the action is to call an Ivory function, the one described in the
 previous section, that toggles that value pointed to by \cd{res}.  This value
 pointed to by \cd{res} is then emitted on the channel.
 
 In the third column the program, defined in the \cd{Tower} monad, initializes a
 channel between two tasks as well as the tasks themselves.  A channel, or queue,
-consists of a transmit (\cd{tx}) and receive (\cd{rx}) endpoints, respectively.
+consists of transmit (\cd{tx}) and receive (\cd{rx}) endpoints, respectively.
 The \cd{blink} task is an RTOS task that will send output to the
 \cd{lightswitch} task, which toggles the LED based on the incoming Boolean
 values.

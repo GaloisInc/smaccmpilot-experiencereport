@@ -9,8 +9,8 @@ embedded development.
 Our experience using Ivory and Tower to build SMACCMPilot has been an exteme
 lesson in dog-fooding EDSLs.  We had multiple developers writing the compilers
 and using them to build applications concurrently.  We learned a few lessons
-that are relevant to dog-fooding any compiler development but particularly
-relevant to EDSL development.
+that are relevant to any compiler development but particularly relevant to EDSL
+development.
 
 \paragraph{Type-checking as interpretation}
 Build times are non-trivial for large software systems.  At the time of writing,
@@ -45,15 +45,15 @@ particularly motivates us to make fewer bugs and to discover them early.
 %% and external devices.}  For similar reasons, we do not generally use an
 %% interpreter with Ivory (although we have built one).
 
-During development, it slowly become apparent how useful Haskell type-checking
-is for embedded development is.  As described in Section~\ref{sec:ivory}, we
+During development, it became apparent how useful Haskell type-checking
+is for embedded programming.  As described in Section~\ref{sec:ivory}, we
 have embedded Ivory's type system in Haskell's.  Thus, domain-specific
 type-errors are caught during Haskell type-checking.  Type-checking, and other
-static warnings reported by GHC, is nearly instantaneous via the interpreter
+static warnings reported by GHC, are nearly instantaneous via the interpreter
 since it can be done on a module-by-module basis.  The upshot is that Ivory
 programs that would generate unsafe C programs are caught nearly
-instantaneously.  If type-checking passes, we know the generated C will be
-memory-safe.
+instantaneously.  If type-checking is successful, we know the generated C will
+be memory-safe.
 
 In addition, we have found it useful detect potential bugs even if the C
 compiler might detect them.  To take one example, consider unused variable
@@ -75,7 +75,7 @@ Stepping back, the idea that plumbing arguments to Haskell functions is the
 hardest part of embedded development is amazing.  We are not dealing with bugs
 in low-level OS interfaces, we are not making timing errors in communication, we
 are not dealing with type-errors like you might find in raw C (where data might
-be case to \cd{void} or \cd{char[]}.
+be cast to \cd{void*} or \cd{char[]}).
 
 Because plumbing is so easy, it encourages us to improve modularity in the
 system.  Defining a new RTOS task is easy, so we might as well modularize
@@ -87,7 +87,7 @@ modular than other autopilots.
 
 \paragraph{Control your compiler}
 If we were writing our application in a typical compiled language, even a
-high-level one, and found such a compiler bug, we would perhaps file a bug
+high-level one, and found a compiler bug, we would perhaps file a bug
 report with the developers... and wait.  If we had access to the sources, we
 might try making a change, but doing so risks introducing new bugs or at the
 least, forking the compiler.  Most likely, the compiler would not change, and we
@@ -147,7 +147,7 @@ library.  The distinction between language developers and users becomes
 ambiguous.  As an extreme example, one can think of Tower as ``just'' a library
 for Ivory.  A smaller example is defining a conditional operator in terms of
 Ivory's if-then-else primitive as shown in Figure~\ref{fig:ivory-cond}.  All
-types above were introduced in Section~\cite{sec:ivory}.  With the \cd{cond\_}
+types above were introduced in Section~\ref{sec:ivory}.  With the \cd{cond\_}
 operator, we can replace nested if-then-else statements as shown in the figure
 with more convenient conditionals, without modifying the language.
 
@@ -162,7 +162,7 @@ standard library, to be shared.
 \paragraph{Semantics}
 To take advantage of legacy cross-compilers, we are essentially forced to
 generate C code from our EDSL.  A large focus in designing Ivory is to allow
-expressive but well-defined programs.  We believe Ivory-generated programs
+expressive but well-defined programs.  We believe Ivory
 cannot produce memory-unsafe C programs.  However, undefined C programs can be
 generated from Ivory; for example, signed integer overflow and division-by-zero
 are undefined.  Guaranteeing programs are free from these behaviors is decidable
@@ -187,7 +187,7 @@ implementation-defined behavior.  In Ivory, we attempt to eliminate almost all
 implementation-defined behaviors.  For example, only fixed-width size types,
 like \cd{uint8\_t} or \cd{int32\_t}, can be generated.  Implementation-defined
 sizes, like \cd{int} or \cd{char} are not available.  We have found these to be
-dangerous: programmers might assume properties about a size type that does not
+dangerous: programmers might assume properties about the size of a type that do not
 hold in a non-standard architecture (e.g., that an \cd{int} is at least 32 bits
 or that \cd{char} is unsigned; both are implementation-defined).  Such
 assumptions are particularly dangerous when porting code between different
