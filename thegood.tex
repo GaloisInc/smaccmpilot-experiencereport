@@ -23,8 +23,8 @@ sources are compiled multiple times for different targets on
 multiple operating systems.
 
 Then, to execute the software on the embedded device, we have to write the
-software to the device's memory via a JTAG, over serial using a bootloader, or
-by some other means.  writing the software can take several seconds.
+software to the device's memory via a JTAG programmer or a serial bootloader,
+which takes on the order of ten seconds.
 
 All this is to say that the end-to-end debug cycle might mean only testing a
 handful of changes per hour.  Clearly, the debug cycle in embedded development
@@ -235,8 +235,9 @@ bool    y = (uint8\_t)(a-b) > 0;
 sizeof(uint8\_t) < sizeof(int)
 \end{code}
 \noindent
-Most of the time, this behavior is hidden from the user, but it becomes apparent
-on small, embedded architectures.
+This behavior is important to the embedded programmer because, across various
+embedded processors and C compilers, integer sizes are often defined
+differently.
 
 In Ivory, arithmetic is at the size of the operands, which we believe is more
 intuitive.  We force the generated C to respect this semantics by inserting
