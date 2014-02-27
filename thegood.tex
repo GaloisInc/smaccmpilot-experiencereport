@@ -85,6 +85,28 @@ isolated tasks, simplifying the architectural analysis of the system.  As
 reported in Section~\ref{sec:smaccmpilot}, our system is significantly more
 modular than other autopilots.
 
+\paragraph{Faking a module system}
+As can be seen in the example from Section~\ref{sec:ivory}, Functions and data
+structures that are defined at the top-level are ``packaged'' into a \cd{Module}
+to provide to the Ivory compiler.  The onus is on the programmer to package up
+all the necessary components.
+
+One the one hand, the approach provides the programmer control over how to
+modularize the generated C code, deciding which definitions to put in a C
+source or header file.  On the other hand, we have found it to be verbose,
+tedious, and error-prone.  Generally, we want the C files to have similar
+structure to the Haskell modules in which Ivory programs are written.  From that
+respect, the Ivory module system simply duplicates the Haskell module system.
+
+Worse, moreover, is when the programmer forgets to package a definition.  The
+error only becomes apparent at C \emph{link} time, near the end of a long build
+process.  Missing definitions have plagued our builds.
+
+We could move symbol resolution up the build cycle to the C-code generation
+phase.  Ideally, we would move it up the build cycle even further.  We are
+currently exploring the use of Template Haskell to generate Ivory modules at
+compile-time to assist the programmer.
+
 \paragraph{Control your compiler}
 If we were writing our application in a typical compiled language, even a
 high-level one, and found a compiler bug, we would perhaps file a bug
@@ -158,28 +180,6 @@ standard library, to be shared.
 %% \paragraph{Simplification is necessary}
 %% \lp{not sure if this is that interesting}
 %% We wrote a constant folder for Ivory as a ``nice to have'' feature.  
-
-\paragraph{Faking a module system}
-As can be seen in the example from Section~\ref{sec:ivory}, Functions and data
-structures that are defined at the top-level are ``packaged'' into a \cd{Module}
-to provide to the Ivory compiler.  The onus is on the programmer to package up
-all the necessary components.
-
-One the one hand, the approach provides the programmer control over how to
-modularize the generated C code, deciding which definitions to put in a C
-source or header file.  On the other hand, we have found it to be verbose,
-tedious, and error-prone.  Generally, we want the C files to have similar
-structure to the Haskell modules in which Ivory programs are written.  From that
-respect, the Ivory module system simply duplicates the Haskell module system.
-
-Worse, moreover, is when the programmer forgets to package a definition.  The
-error only becomes apparent at C \emph{link} time, near the end of a long build
-process.  Missing definitions have plagued our builds.
-
-We could move symbol resolution up the build cycle to the C-code generation
-phase.  Ideally, we would move it up the build cycle even further.  We are
-currently exploring the use of Template Haskell to generate Ivory modules at
-compile-time to assist the programmer.
 
 \paragraph{Semantics}
 To take advantage of legacy cross-compilers, we are essentially forced to
