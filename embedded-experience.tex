@@ -96,11 +96,13 @@
 \maketitle
 
 \begin{abstract}
-\lp{make interesting}
-We describe our experience building two embedded domain-specific languages
-hosted in Haskell for building large embedded systems and using them to build a
-complex open-source autopilot, including device drivers, control laws, fail-safes,
-and communication subsystem.
+We synthesized an approximately 50,000 lines of C code open-source autopilot
+from embedded domain-specific languages (EDSLs) hosted in Haskell.  The
+synthesized code includes control laws, mode logic, cryptography, and device
+drivers.  The autopilot was built in less than two engineer years.  The EDSLs
+ensure generated C is largely bug free.  This is the story of how EDSLs provided
+the productivity and safety gains to do large-scale low-level embedded
+programming and lessons we learned in doing so.
 \end{abstract}
 
 \category{CR-number}{subcategory}{third-level}
