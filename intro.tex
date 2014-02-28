@@ -5,12 +5,12 @@ is in low-level languages, like C or assembly, and programs interact intimately
 with the hardware.  Embedded domain-specific languages (EDSLs) are in
 some sense at the other end of the software spectrum: they are often embedded
 (in a different sense of the word!) in high-level programming languages such as
-Haskell or ML, and are used to lift the abstraction level.
+Haskell or ML, and are used to lift the programmer's abstraction level.
 
 That said, there is no reason in-principle why EDSLs cannot be used for embedded
 programming; this report is about our experience in building new EDSLs for
 embedded programming and the benefits and difficulties in using them.  Our
-experiences are based on building an autopilot system called SMACCMPilot from
+experiences are based on building an autopilot system called SMACCMPilot using
 our EDSLs.  The breadth and scope of the project sets it apart.  The autopilot
 software is a complete embedded system that
 includes not just the core flight control algorithms, but also device drivers,
@@ -33,7 +33,8 @@ developing new EDSLs for low-level programming as well as practitioners
 considering using EDSLs.
 
 All of the EDSLs described herein, as well as SMACCMPilot itself, are
-open-source software. Further documentation is available at \url{smaccmpilot.org}.
+open-source software. Further documentation and pointers to the sources are
+available at \url{smaccmpilot.org}.
 
 
 %% \lp{Indeed, a number of researchers have explored EDSLs for generating embedded

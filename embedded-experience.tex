@@ -50,6 +50,7 @@
                \newcommand{\lp}[1]{}
              }
 
+\newcommand{\mytilde}{\raise.17ex\hbox{$\scriptstyle\mathtt{\sim}$}}
 \newenvironment{code}{\begin{alltt}\footnotesize}{\end{alltt}}
 \newenvironment{smcode}{\begin{alltt}\scriptsize}{\end{alltt}}
 
@@ -96,13 +97,13 @@
 \maketitle
 
 \begin{abstract}
-We synthesized a complex embedded system from embedded domain-specific languages
-(EDSLs) hosted in Haskell.  The synthesized C code implemented control laws,
-mode logic, cryptography, and device drivers for a quadcopter autopilot.  The
-autopilot was built in less than two engineer years.  The EDSLs ensure generated
-C is largely bug free.  This is the story of how EDSLs provided the productivity
-and safety gains to do large-scale low-level embedded programming and lessons we
-learned in doing so.
+We report on our experiences in synthesizing a fully-featured autopilot from
+embedded domain-specific languages (EDSLs) hosted in Haskell, including control
+laws, mode logic, encrypted communications system, and device drivers.  The
+autopilot was built in less than two engineer years, thanks to the productivity
+gains of EDSLs, and the EDSLs ensure generated C is largely bug free.  This is
+the story of how EDSLs provided the productivity and safety gains to do
+large-scale low-level embedded programming and lessons we learned in doing so.
 \end{abstract}
 
 \category{CR-number}{subcategory}{third-level}
@@ -123,11 +124,11 @@ keyword1, keyword2
 
 \input{smaccm}
 
-\input{codeexamples}
+%% \input{codeexamples}
 
 \input{thegood}
 
-\input{thebad}
+%% \input{thebad}
 
 \input{conclusion}
 
