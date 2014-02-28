@@ -6,7 +6,7 @@ using EDSLs for embedded programming, focusing on those that were surprising to
 us, despite our teams' previous experience in functional programming and
 embedded development.
 
-Our experience using Ivory and Tower to build SMACCMPilot has been an exteme
+Our experience using Ivory and Tower to build SMACCMPilot has been an extreme
 lesson in dog-fooding EDSLs.  We had multiple developers writing the compilers
 and using them to build applications concurrently.  We learned a few lessons
 that are relevant to any compiler development but particularly relevant to EDSL
@@ -52,8 +52,9 @@ type-errors are caught during Haskell type-checking.  Type-checking, and other
 static warnings reported by GHC, are nearly instantaneous via the interpreter
 since it can be done on a module-by-module basis.  The upshot is that Ivory
 programs that would generate unsafe C programs are caught nearly
-instantaneously.  If type-checking is successful, we know the generated C will
-be memory-safe.
+instantaneously. The type system tracks the global or stack frame provenance of
+references, as well as structure accessors and array indicies, to ensure
+all well-typed Ivory programs generate memory-safe C.
 
 In addition, we have found it useful detect potential bugs even if the C
 compiler might detect them.  To take one example, consider unused variable
@@ -125,7 +126,7 @@ errors.  Rebuilding the compiler takes seconds.
 More generally, we have a different mindset programming in an EDSL: if a class
 of bug occurs a few times---whether resulting in the compiler or not---we change
 the language/compiler to eliminate it (or at least to automatically insert
-verification conditions to check for it).  Instead of a growing test-suite, we
+assertions to check for it).  Instead of a growing test-suite, we
 have a growing set of checks in the compiler, to help eliminate both our bugs
 and the bugs in \emph{all} future Ivory programs.
 
@@ -167,7 +168,7 @@ ifte_ (x >? 100)
 With an EDSL, and particularly a Turing-complete macro language, everything is a
 library.  The distinction between language developers and users becomes
 ambiguous.  As an extreme example, one can think of Tower as ``just'' a library
-for Ivory.  A smaller example is defining a conditional operator in terms of
+for Ivory.  A smal example is defining a conditional operator in terms of
 Ivory's if-then-else primitive as shown in Figure~\ref{fig:ivory-cond}.  All
 types above were introduced in Section~\ref{sec:ivory}.  With the \cd{cond\_}
 operator, we can replace nested if-then-else statements as shown in the figure

@@ -45,15 +45,14 @@ Regarding the expressiveness, Ivory has a variety of useful features, including:
     registers~\cite{high-level}.
 \end{itemize}
 
-We built Ivory with some limitations, motivated by making analysis simpler to
-ensure safe C programs are generated.  Ivory does not support heap-based dynamic
-memory allocation (but global variables can be defined).  C arrays are
-fixed-length.  There is no pointer arithmetic.  Pointers are non-nullable.
-Union types are not supported.  Unsafe casts are not supported: casts must be to
-a strictly more expressive type (e.g., from an unsigned 8-bit integer to an
-unsigned 16-bit integer) or a default value must be provided for when the cast
-is not valid. The most common unsafe C cast is not possible: no void-pointer
-type exists in Ivory.
+We built Ivory with some limitations in order to  ensure safe C programs are
+generated.  Ivory does not support heap-based dynamic memory allocation (but
+global variables can be defined).  C arrays are fixed-length.  There is no
+pointer arithmetic.  Pointers are non-nullable.  Union types are not supported.
+Unsafe casts are not supported: casts must be to a strictly more expressive type
+(e.g., from an unsigned 8-bit integer to an unsigned 16-bit integer) or a
+default value must be provided for when the cast is not valid. The most common
+unsafe C cast is not possible: no void-pointer type exists in Ivory.
 
 In Ivory, these have not been limiting factors, particularly because of the
 power of using Haskell as a macro system.  For example, while arrays must be of
@@ -125,7 +124,7 @@ type safety of compilers like Cyclone, etc.
 We do not have space to adequately describe Ivory's type system; we leave that
 to a forthcoming paper.  Here we will note that the embedding depends on the use
 of data kinds~\cite{datakinds}, type families~\cite{typefamilies}, and rank-2
-polymorphism\cite{stmonad}.
+polymorphism~\cite{stmonad}.
 
 %% we define a type-level record to track effects.  We do not have
 %% space to describe the full embedded type system, but hope to do so in a
@@ -206,19 +205,13 @@ bar = Label "bar"
 is generated.  We describe the use of labels shortly.
 
 A procedure, corresponding to a C function, has a type of the form
-\begin{code}
-Def (params :-> out)
-\end{code}
-\noindent
+\cd{Def (params :-> out)}
 where \cd{params} are the procedure's parameter types and \cd{out} is its return
 type.  The procedure \cd{foo\_init} has a single input and its return type is
 unit, corresponding to the \cd{void} type in C.  The types of the procedure's
 inputs are types in a type-level list (the (\cd{`}) promotes the list value
 constructor to a type constructor~\cite{datakinds}).  The type
-\begin{code}
-Ref s area
-\end{code}
-\noindent
+\cd{Ref s area}
 is the type of a \emph{reference}, or pointer guaranteed to be non-null by
 construction.  A reference type constructor takes a \emph{scope} type and a
 memory-area type.  The scope type denotes stack-allocated scope, or global and
@@ -234,9 +227,9 @@ variable \cd{f\_ref}'s type is
 Ref s (Struct "foo\_struct")
 \end{code}
 \noindent
-Before the body of a procedure, the user may add requirements on inputs or
-ensure statements on return values, useful for testing and verification (these
-are not shown in the current example).
+Before the body of a procedure, the user may add expression-level preconditions
+on inputs and postconditions on return values. (These are not shown in the
+current example).
 
 The body of the procedure is defined by \cd{prgm}.  Its return type is an Ivory
 expression, returning unit.  The Ivory monad also contains an effects parameter
@@ -254,18 +247,18 @@ reminiscent of C's \cd{->} operator, has the type
 \end{code}
 \noindent
 again eliding type class and data-kind constraints.  Note, however, that
-gives cd{\mytilde{}>} gives a reference to the field, not the field value.
+gives \cd{\mytilde{}>} gives a reference to the field, not the field value.
 
-The \cd{bar} field of the struct pointed to us updated with 1.  Updating the
-array in \cd{baz} is slightly more complicated since it contains an array. In
-the example, The 0th index of the array in the \cd{baz} field is updated with 2
+The \cd{bar} field of the struct pointed to is updated with 1.  Updating
+\cd{baz} is slightly more complicated since it contains an array. In
+the example, the 0th index of the array in the \cd{baz} field is updated with 2
 (the other indexes are unmodified).
 
 Array indexing is guaranteed to be safe by the type system.  Like arrays,
 indexes into arrays have types that are parameterized by a type-level natural
 number.  An index type \cd{Ix n} only supports indexes from \cd{0} to \cd{n-1}.
-Eliding type-class and data-kind constraints, the type of the index operator
-ensures that the array length and index size match:
+Eliding type-class and data-kind constraints for the sake of presentation, the
+type of the index operator ensures that the array length and index size match:
 \begin{code}
 (!) :: Ref s (Array len area) -> Ix len -> Ref s area
 \end{code}
@@ -276,7 +269,8 @@ be sent to the compiler.  The module \cd{foo\_module} contains the definition
 for the struct and the implementation of the function.  Because structure names
 are type-level strings which are not \cd{*}-kinded, a proxy type is given to
 turn an arbitrary-kinded type into a \cd{*}-kinded type (which can be passed to
-a function).
+a function). We discuss drawbacks of this module system design in
+Section~\ref{sec:thegood}.
 
 %% The basic syntax of Ivory is the statement, which make up all procedures.
 %% Ivory statements are effectful, we used a traditional a monadic interface.

@@ -47,7 +47,7 @@ that interacts with multiple input and output peripherals concurrently using a
 real-time operating system (RTOS). Typical RTOSes provide just a few low-level
 locking and signaling primitives for scheduling. Since microcontrollers do not
 have virtual memory managment units (MMUs) found on larger processors, the RTOS
-kernel can't protect the system against badly behaved user code. These
+kernel cannot protect the system against badly behaved user code. These
 restrictions put significant burden on programmers: they must ensure all tasks
 and communication between tasks is implemented correctly.
 
@@ -73,14 +73,14 @@ multithreaded software architecture. Tower still allows the programmer to use
 all the low-level power of Ivory for general programming, but uses a separate
 language for describing tasks and the connections between them.  This is one of
 the great productivity features of working with EDSLs: if you discover the
-language you're using is difficult, tricky, or unsafe for solving a particular
+language you are using is difficult, tricky, or unsafe for solving a particular
 problem, you can easily extend that language with a library, without modifying
 the compiler.
 
 In Tower, one specifies tasks and communication channels that generates correct
 Ivory implementations, as well as architecture description artifacts. Tower
 hides the dangerous low-level scheduling primitives from the user, and keeps
-type information for channels (i.e. the datatype of the channel message),
+type information for channels (i.e., the datatype of the channel message),
 expressed as Ivory types, in the Haskell type system.
 
 Tower allows the programmer to describe a static graph of channels and tasks.
