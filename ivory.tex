@@ -167,7 +167,7 @@ containing two fields consisting of an unsigned byte and an array of 10 signed
 \cd{"fooStruct"}, that is unique to the defined struct.  The \cd{Stored} type
 constructor signifies that the value is allocated in-memory~\cite{memareas}.
 The \cd{Array} type constructor takes a type-level natural number as a parameter
-(implemented as a Glasgow Haskell Compiler extension) to fix the size of an
+(available as a Glasgow Haskell Compiler extension) to fix the size of an
 array.
 
 A procedure, corresponding to a C function, has a type of the form
@@ -197,7 +197,7 @@ an Ivory program that sets each element in the \cd{baz} field of the struct with
 the value \cd{val} passed to it, leaving the \cd{bar} field unchanged.
 
 Following~\cite{memareas}, Ivory guarantees memory-safe array access in the type
-system since array lengths are statically known.  Ivory exposes an \cd{arrayMap}
+system since array lengths are statically known.  Ivory provides an \cd{arrayMap}
 operator that applies a function to each valid index into the array.  The
 function applied in this case is a \cd{store} operation that takes a reference
 to a memory area, a value, and stores the value in the area.  It is a type-error
@@ -214,10 +214,11 @@ index.  The safety of indexing is maintained since the operator has the type
 tying the length of the array to the maximum index.  For example, an index type
 (\cd{Ix 10}) supports index values from 0 to 9.
 
-The example elides most of Ivory's language and does not exhibit some of its
-additional features to prevent unsafe programs.  For example, if \cd{setBaz}
-had allocated stack memory and created a reference to it, then tried to return
-the reference (creating a dangling pointer), it would result in a type error.
+The example only shows a small part of Ivory's language and does not exhibit
+some of its additional features to prevent unsafe programs.  For example, if
+\cd{setBaz} had allocated stack memory and created a reference to it, then tried
+to return the reference (creating a dangling pointer), it would result in a type
+error.
 
 Additionally, for application-specific properties that cannot be type-checked,
 Ivory permits the insertion of assertions, assumptions on arguments, and
