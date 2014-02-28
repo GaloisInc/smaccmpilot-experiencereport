@@ -1,0 +1,6 @@
+digraph {
+        graph [rankdir=LR concentrate=true];
+        blinknode [label="\"blink\" task|periodic @ 100ms|<out>emitter" shape=record];
+        lightswitch [label="\"lightswitch\" task|<in>event handler" shape=record];
+        blinknode:out -> lightswitch:in [label="IBool" style="bold"];
+}
