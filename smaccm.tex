@@ -14,7 +14,8 @@ hardware components are black boxes.}
 \label{fig:smaccmpilotSwArch}
 \end{figure}
 
-SMACCMPilot is an open-source (BSD Licensed) autopilot system for quadcopter
+Our goal was to build a robust autopilot. The result is
+SMACCMPilot, an open-source (BSD Licensed) autopilot system for quadcopter
 unmanned air vehicles (UAVs).
 It is complete embedded system implemented with
 the Ivory/Tower tools.
@@ -24,8 +25,8 @@ communication protocol stack, and several layers of control systems.
 SMACCMPilot runs on open source flight controller hardware from the PX4
 Autopilot project~\cite{px4-proj}. The hardware platform is
 a custom printed circuit board with an ARM Cortex M4 microcontroller and the
-sensors used to determine the orientation and altitude of the vehicle.
-
+accelerometer, magnetometer, gyroscope, and barometer sensors used to
+determine the orientation and altitude of the vehicle.
 
 A simplified software architecture of SMACCMPilot is shown in
 Figure~\ref{fig:smaccmpilotSwArch}.
@@ -56,12 +57,12 @@ code is a machine generated 10kloc of Ivory code. When compiled, the complete
 application
 is 48kloc of generated C~code, and depends on some external C libraries to
 implement the operating system (4kloc) and other functions, such as sensor
-fusion  This compares favorably to existing open
-source flight controller systems.
+fusion.  This compares favorably to existing open source flight controller
+systems.
 
 As an example, we haveve selected two other systems which have a similar feature
-set and run on similar hardware to SMACCMPilot - the ArduPilot
-project\cite{apm-proj} and the PX4 project. Though, in
+set and run on similar hardware to SMACCMPilot --- the ArduPilot
+project~\cite{apm-proj} and the PX4 project. Though, in
 both cases, these systems have more high level functionality than SMACCMPilot,
 they both implement all of the low level features to support similar (or
 identical) microcontroller based flight controller boards, comparable low level

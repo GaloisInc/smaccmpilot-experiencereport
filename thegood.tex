@@ -49,10 +49,10 @@ During development, it became apparent how useful Haskell type-checking
 is for embedded programming.  As described in Section~\ref{sec:ivory}, we
 have embedded Ivory's type system in Haskell's.  Thus, domain-specific
 type-errors are caught during Haskell type-checking.  Type-checking, and other
-static warnings reported by GHC, are nearly instantaneous via the interpreter
+static warnings reported by GHC, are nearly instantaneous
 since it can be done on a module-by-module basis.  The upshot is that Ivory
-programs that would generate unsafe C programs are caught nearly
-instantaneously. The type system tracks the global or stack frame provenance of
+programs that would generate unsafe C programs are caught immediately.
+The type system tracks the global or stack frame provenance of
 references, as well as structure accessors and array indicies, to ensure
 all well-typed Ivory programs generate memory-safe C.
 
@@ -83,7 +83,7 @@ system.  Defining a new RTOS task is easy, so we might as well modularize
 functionality to improve isolation and security.  For example, in the ground
 station communication subsystem, encryption and decryption are each executed in
 isolated tasks, simplifying the architectural analysis of the system.  As
-reported in Section~\ref{sec:smaccmpilot}, our system is significantly more
+we noted in Section~\ref{sec:smaccmpilot}, our system is significantly more
 modular than other autopilots.
 
 \paragraph{Faking a module system}
@@ -119,8 +119,8 @@ to make sure that the specific bug found is not hit again.  Such a situation is
 notorious in embedded cross-compilers that usually have a small support team and
 are themselves many revisions behind the main compiler tool-chain.
 
-But with an EDSL, the situation is different.  With a small code-base
-implementing the compiler, it’s easy to write new passes or inspect passes for
+But with an EDSL the situation is different.  With a small code-base
+implementing the compiler, it is easy to write new passes or inspect passes for
 errors.  Rebuilding the compiler takes seconds.
 
 More generally, we have a different mindset programming in an EDSL: if a class
@@ -183,7 +183,7 @@ standard library, to be shared.
 %% We wrote a constant folder for Ivory as a ``nice to have'' feature.  
 
 \paragraph{Semantics}
-To take advantage of legacy cross-compilers, we are essentially forced to
+To take advantage of legacy cross-compilers, we are forced to
 generate C code from our EDSL.  A large focus in designing Ivory is to allow
 expressive but well-defined programs.  We believe Ivory
 cannot produce memory-unsafe C programs.  However, undefined C programs can be
@@ -201,15 +201,15 @@ compiler.  Still another option might be to trap to a user-defined
 exception-handler.
 
 Currently, SMACCMPilot contains approximately 2500 compiler-inserted non-trivial
-(i.e., cannot be constant-folded away) checks.  In the future, we hope to
+checks that cannot be constant-folded away.  In the future, we hope to
 \emph{prove} these checks never fail.  We have used model-checking in a limited
-fashion, but naively applied, it does not scale to the size of SMACCMPilot.
+fashion, but naively applied; it does not scale to the size of SMACCMPilot.
 
 There are two other semantics categories to consider: defined behavior and
 implementation-defined behavior.  In Ivory, we attempt to eliminate almost all
 implementation-defined behaviors.  For example, only fixed-width size types,
 like \cd{uint8\_t} or \cd{int32\_t}, can be generated.  Implementation-defined
-sizes, like \cd{int} or \cd{char} are not available.  We have found these to be
+sizes, like \cd{int} or \cd{char} are not used.  We have found these to be
 dangerous: programmers might assume properties about the size of a type that do not
 hold in a non-standard architecture (e.g., that an \cd{int} is at least 32 bits
 or that \cd{char} is unsigned; both are implementation-defined).  Such

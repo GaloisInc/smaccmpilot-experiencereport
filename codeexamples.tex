@@ -1,0 +1,195 @@
+\section{Ivory \& Tower Example Code}
+\label{sec:examples}
+
+\paragraph{Ivory Language Interfaces}
+Ivory has different ``inferfaces'' for writing programs, defining procedures to
+encapsulate programs (and that are compiled to C functions), defining C-level data
+structures, and for constructing modules.  We cannot cover all of these here, so
+we focus on the most central, explaining them by way of an example.
+
+\begin{figure}
+    \begin{smcode}
+[ivory|
+struct foo\_struct
+  \{ bar :: Stored Uint8
+  ; baz :: Array 10 (Stored Sint16)
+  \}
+|]
+
+foo\_init :: Def(`[Ref s (Struct "foo\_struct")]:-> ())
+foo\_init = proc "foo\_init" $ \textbackslash{}f\_ref -> body (prgm f\_ref)
+
+prgm :: Ref s (Struct "foo_struct") -> Ivory eff ()
+prgm f_ref = do
+  store  (f_ref \(\sim\)> bar)      1
+  store ((f_ref \(\sim\)> baz) ! 0) 2
+
+foo\_module :: Module
+foo\_module = package "foo\_module" $ do
+  defStruct (Proxy :: Proxy "foo_struct")
+  incl foo\_init
+    \end{smcode}
+  \caption{Example Ivory module definition}
+  \label{fig:module}
+\end{figure}
+%% $
+
+Consider Figure~\ref{fig:module}.  First, we define a struct (or product type)
+using a quasiquoter.  Struct \cd{foo\_struct} contains two fields
+consisting of an unsigned byte and an array of 10 signed 16-bit integers.  The
+\cd{Stored} type constructor signifies that the value is allocated
+in-memory~\cite{memareas}.  The \cd{Array} type constructor takes a type-level
+natural number as a parameter (implemented as a Glasgow Haskell Compiler
+extension) to fix the size of an array.
+
+The quasiquoter uses Template Haskell~\cite{th} to generate
+typeclass instances for the defined struct as well as top-level values that are
+field accessors.  For example, for the \cd{bar} field, a label
+\begin{code}
+bar :: Label "foo\_struct" (Stored Uint8),
+bar = Label "bar"
+\end{code}
+\noindent
+is generated.  We describe the use of labels shortly.
+
+A procedure, corresponding to a C function, has a type of the form
+\cd{Def (params :-> out)}
+where \cd{params} are the procedure's parameter types and \cd{out} is its return
+type.  The procedure \cd{foo\_init} has a single input and its return type is
+unit, corresponding to the \cd{void} type in C.  The types of the procedure's
+inputs are types in a type-level list (the (\cd{`}) promotes the list value
+constructor to a type constructor~\cite{datakinds}).  The type
+\cd{Ref s area}
+is the type of a \emph{reference}, or pointer guaranteed to be non-null by
+construction.  A reference type constructor takes a \emph{scope} type and a
+memory-area type.  The scope type denotes stack-allocated scope, or global and
+statically allocated scope.  In the example, the parameter to \cd{foo\_init} can
+be a reference to either scope.  The memory area pointed to be the reference
+has the type of the struct defined above.
+
+Now we describe the procedure \cd{foo\_init}.  The function \cd{proc} takes a
+string corresponding to the name of the function that will be generated in C,
+then a function from the procedures arguments to its body.  The lambda-bound
+variable \cd{f\_ref}'s type is
+\begin{code}
+Ref s (Struct "foo\_struct")
+\end{code}
+\noindent
+Before the body of a procedure, the user may add expression-level preconditions
+on inputs and postconditions on return values. (These are not shown in the
+current example).
+
+The body of the procedure is defined by \cd{prgm}.  Its return type is an Ivory
+expression, returning unit.  The Ivory monad also contains an effects parameter
+that tracks effects, as described above, using a type-level record.
+
+\newcommand{\mytilde}{\raise.17ex\hbox{$\scriptstyle\mathtt{\sim}$}}
+
+Two statements implement the program, both of which update memory areas.  The
+\cd{store} operator takes a reference and a value, and stores the value in the
+the memory area pointed to by the reference.  The struct accessor operator,
+reminiscent of C's \cd{->} operator, has the type
+\begin{code}
+(\(\sim\)>) :: Ref s (Struct symbol)
+      -> Label symbol field -> Ref s field
+\end{code}
+\noindent
+again eliding type class and data-kind constraints.  Note, however, that
+gives \cd{\mytilde{}>} gives a reference to the field, not the field value.
+
+The \cd{bar} field of the struct pointed to is updated with 1.  Updating
+\cd{baz} is slightly more complicated since it contains an array. In
+the example, the 0th index of the array in the \cd{baz} field is updated with 2
+(the other indexes are unmodified).
+
+Array indexing is guaranteed to be safe by the type system.  Like arrays,
+indexes into arrays have types that are parameterized by a type-level natural
+number.  An index type \cd{Ix n} only supports indexes from \cd{0} to \cd{n-1}.
+Eliding type-class and data-kind constraints for the sake of presentation, the
+type of the index operator ensures that the array length and index size match:
+\begin{code}
+(!) :: Ref s (Array len area) -> Ix len -> Ref s area
+\end{code}
+
+The final interface we describe in this example if our module interface.
+A \cd{Module} contains all of the top-level procedures and struct definitions to
+be sent to the compiler.  The module \cd{foo\_module} contains the definition
+for the struct and the implementation of the function.  Because structure names
+are type-level strings which are not \cd{*}-kinded, a proxy type is given to
+turn an arbitrary-kinded type into a \cd{*}-kinded type (which can be passed to
+a function). We discuss drawbacks of this module system design in
+Section~\ref{sec:thegood}.
+
+\begin{figure*}
+  \begin{tabular}{p{0.36\textwidth}|p{0.30\textwidth}|p{0.33\textwidth}}
+    \begin{smcode}
+func :: Integer
+     -> Def ('[Ref s (Stored IBool), Uint32]
+             :-> ())
+func period = proc "func" $ \textbackslash{}res currTime ->
+  body $ do
+    even <- assign (currTime .% (2 * p) <? p)
+    store res even
+    where
+    p = fromIntegral period
+    \end{smcode} &
+    \begin{smcode}
+blink :: ChannelSource (Stored IBool)
+      -> Task ()
+blink chan = do
+  tx  <- withChannelEmitter chan
+  res <- taskLocal
+  onPeriod period $ \textbackslash{}now -> do
+    call_ (func period) res now
+    emit_ tx res
+  where period = 100 :: Integer
+    \end{smcode} &
+% $
+    \begin{smcode}
+blinkApp :: Tower ()
+blinkApp = do
+  (tx,rx) <- channel
+  task "blink" (blink tx)
+  task "lightswitch" $
+    onChannel rx $
+      \textbackslash{}lit -> do
+        ifte_ lit (turnOn light)
+                  (turnOff light)
+    \end{smcode}
+  \end{tabular}
+  \caption{Ivory (Column 1) and Tower (columns 2-3)}
+  \label{fig:tower-ex}
+\end{figure*}
+\paragraph{Tower example}
+In Figure~\ref{fig:tower-ex}, we sketch a small Tower example that is
+representative of a device driver that blinks an LED at the rate of 100 ticks
+(the duration of a tick is dependent on the RTOS backend to Tower used.)  Small
+simplifications to Tower have been made in the code, eliding details relating to
+code generation and backend selection.
+
+Consider the first column of Figure~\ref{fig:tower-ex}.  The function takes an
+integer and returns an Ivory procedure, which compiles to a C function.  The
+procedure takes two arguments, a reference to a Boolean and a unsigned 32-bit
+value.  The procedure creates a local variable named \cd{even},
+assigning to it the value of an arithmetic expression.  The expression
+takes a current time, which is a multiple of the period, and returns whether the
+current time divided by the period is even or odd.  (Operators have a preceding
+\cd{.} or a following \cd{?} for Boolean operators to avoid name-space collision
+with Haskell operators.)  The result of the expression is stored into the
+\cd{res} reference.
+
+The \cd{blink} task is defined in column two.  It takes a channel source and
+returns a program in the \cd{Task} monad.  The task first
+initializes an emitter for the channel then creates a reference to private but
+globally-allocated memory.  Every 100 ticks, an Ivory action is taken.  In this
+case, the action is to call an Ivory function, the one described in the
+previous section, that toggles that value pointed to by \cd{res}.  This value
+pointed to by \cd{res} is then emitted on the channel.
+
+In the third column the program, defined in the \cd{Tower} monad, initializes a
+channel between two tasks as well as the tasks themselves.  A channel, or queue,
+consists of transmit (\cd{tx}) and receive (\cd{rx}) endpoints, respectively.
+The \cd{blink} task is an RTOS task that will send output to the
+\cd{lightswitch} task, which toggles the LED based on the incoming Boolean
+values.
+

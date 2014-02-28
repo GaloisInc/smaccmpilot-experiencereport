@@ -12,18 +12,19 @@ programming; this report is about our experience in building new EDSLs for
 embedded programming and the benefits and difficulties in using them.  Our
 experiences are based on building an autopilot system called SMACCMPilot from
 our EDSLs.  The breadth and scope of the project sets it apart.  The autopilot
-software is not just an application, but a complete embedded system that
+software is a complete embedded system that
 includes not just the core flight control algorithms, but also device drivers,
-encrypted network stack, mode logic, and concurrency and task management.  It is
+encrypted network stack, mode logic, and concurrency and task management.
+As far as we know, it is
 one of the largest (open-source) embedded systems projects developed using the
 EDSL approach.
 
-Our story is a largely positive one: we developed the languages and their (EDSL)
-compilers from scratch in approximately 14 engineer-months then we used them to
-build the SMACCMPilot hardware support and application in another 22
-engineer-months.  We achieved a dramatic increase in productivity as well as
-code quality.  By construction, the generated C excludes large classes of errors
-and undefined behaviors.
+Our story is a largely positive one: we developed the Ivory and Tower languages
+and their (EDSL) compilers from scratch in approximately 14 engineer-months then
+we used them to build the SMACCMPilot hardware support and application in
+another 22 engineer-months.  We achieved a dramatic increase in productivity as
+well as code quality.  By construction, the generated C excludes large classes
+of errors and undefined behaviors.
 
 Our goal in this paper is to summarize some of our lessons-learned.  While we
 use specific examples, the lessons apply more generally to industrially-large
