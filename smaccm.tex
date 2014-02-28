@@ -15,7 +15,7 @@ hardware components are black boxes.}
 \end{figure}
 
 Our goal was to build a robust autopilot. The result is
-SMACCMPilot, an open-source (BSD Licensed) autopilot system for quadcopter
+SMACCMPilot, an open-source (BSD licensed) autopilot system for quadcopter
 unmanned air vehicles (UAVs).
 It is complete embedded system implemented with
 the Ivory/Tower tools.
@@ -33,13 +33,13 @@ Figure~\ref{fig:smaccmpilotSwArch}.
 The flight control software is primarily responsible for reading the sensors,
 estimating the vehicle's attitude and position using sensor fusion, calculating
 control outputs, and sending motor power commands to the motor controllers.
-Higher level control loops manage navigation, and an encrypted command, control,
+Higher level controllers manage navigation, and an encrypted command, control,
 and telemetry link interprets ground station instructions, sends system state to
-the operator, and permits online tuning of control loop parameters.
+the operator, and permits online tuning of controller parameters.
 
 The result is a reasonably complex piece of embedded software. SMACCMPilot has
 30 tasks connected by 47 channels, and 57 globally shared state variables. Most
-of those shared state variables are control loop tuning parameters, which can be
+of those shared state variables are controller tuning parameters, which can be
 modified by commands sent over the telemetry link.
 
 SMACCMPilot was developed alongside the Ivory/Tower tools.  The complete system

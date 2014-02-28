@@ -56,16 +56,16 @@ The type system tracks the global or stack frame provenance of
 references, as well as structure accessors and array indicies, to ensure
 all well-typed Ivory programs generate memory-safe C.
 
-In addition, we have found it useful detect potential bugs even if the C
+In addition, we have found it useful to detect potential bugs even if the C
 compiler might also detect them.  To take one example, consider unused variable
 declarations.  While a C compiler can detect this, perhaps late in the
 compilation phase, we discover these warnings nearly instantaneously during type
 checking.  Moreover, the more preprocessing we can do in Haskell, the more
-potential errors we may find.
+potential errors we may find, and with a better relation to the source.
 
 \paragraph{Type-safe system plumbing}
 The most tedious part of adding many new features to SMACCMPilot is the business
-logic in Tower: defining a new task, and then ``plumbing'' all the communication
+logic in Tower: defining a new task, and then plumbing all the communication
 channels through the code.  There is nothing conceptually difficult in doing so.
 It simply requires modifying the arguments to a Haskell function that generates
 a Tower task (or modifying the fields of a data-type if channels have been
@@ -87,11 +87,11 @@ we noted in Section~\ref{sec:smaccmpilot}, our system is significantly more
 modular than other autopilots.
 
 \paragraph{Faking a module system}
-In Ivory and Tower, top-level functions and structures are ``packaged'' into a
+In Ivory and Tower, top-level functions and structures are packaged into a
 Haskell data structure to provide to the Ivory compiler.  The onus is on the
 programmer to package up all the necessary components.
 
-On the one hand, the approach provides the programmer control over how to
+On one hand, the approach provides the programmer control over how to
 modularize the generated C code, deciding which definitions to put in a C
 source or header file.  On the other hand, we have found it to be verbose,
 tedious, and error-prone.  Generally, we want the C files to have similar

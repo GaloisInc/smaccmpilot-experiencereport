@@ -38,10 +38,10 @@ In many embedded systems, programmers produce an entire system of software
 that interacts with multiple input and output peripherals concurrently using a
 real-time operating system (RTOS). Typical RTOSes provide just a few low-level
 locking and signaling primitives for scheduling. Since microcontrollers do not
-have virtual memory managment units (MMUs) found on larger processors, the RTOS
-kernel cannot protect the system against badly behaved user code. These
-restrictions put significant burden on programmers: they must ensure all tasks
-and communication between tasks is implemented correctly.
+have the virtual memory managment units (MMUs) found on larger processors, the
+RTOS kernel cannot protect any system memory against badly behaved user code.
+These restrictions put significant burden on programmers: they must ensure all
+tasks, and all communication between tasks, are implemented correctly.
 
 During our initial development of SMACCMPilot, we found ourselves writing
 high-quality C functions in Ivory, which guarantees memory-safety of the
@@ -66,7 +66,7 @@ all the low-level power of Ivory for general programming, but uses a separate
 language for describing tasks and the connections between them.  This is one of
 the great productivity features of working with EDSLs: if you discover the
 language you are using is difficult, tricky, or unsafe for solving a particular
-problem, you can easily extend that language with a library, without modifying
+problem, you can easily extend that language with a library without modifying
 the compiler.
 
 In Tower, one specifies tasks and communication channels, and the Tower compiler generate correct
