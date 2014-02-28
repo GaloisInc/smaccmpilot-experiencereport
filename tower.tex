@@ -75,18 +75,7 @@ and a total of about 3000 lines of Haskell code.
 
 
 \begin{figure*}[h!t]
-  \begin{tabular}{p{0.36\textwidth}|p{0.30\textwidth}|p{0.33\textwidth}}
-    \begin{smcode}
-func :: Integere
-     -> Def ('[Ref s (Stored IBool), Uint32]
-             :-> ())
-func period = proc "func" $ \textbackslash{}res currTime ->
-  body $ do
-    even <- assign (currTime .% (2 * p) <? p)
-    store res even
-    where
-    p = fromIntegral period
-    \end{smcode} &
+  \begin{tabular}{p{0.30\textwidth}|p{0.30\textwidth}|p{0.36\textwidth}}
     \begin{smcode}
 blink :: ChannelSource (Stored IBool)
       -> Task ()
@@ -97,8 +86,8 @@ blink chan = do
     call_ (func period) res now
     emit_ tx res
   where period = 100 :: Integer
-    \end{smcode} &
-% $
+    \end{smcode}
+&
     \begin{smcode}
 blinkApp :: Tower ()
 blinkApp = do
@@ -110,8 +99,10 @@ blinkApp = do
         ifte_ lit (turnOn light)
                   (turnOff light)
     \end{smcode}
+&
+    \raisebox{-\height}{\includegraphics[width=5.5cm]{figures/tower-example}}
   \end{tabular}
-  \caption{Ivory (Column 1), Task (Col. 2), and Tower (Col. 3)}
+  \caption{Task (Column. 1), Tower (Col. 2), Graphviz output (Col. 3)}
   \label{fig:tower-ex}
 \end{figure*}
 
