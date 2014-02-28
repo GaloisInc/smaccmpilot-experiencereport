@@ -1,6 +1,37 @@
 \section{Tower: from Functions to Architectures}
 \label{sec:tower}
 
+\begin{figure*}[h!t]
+  \begin{tabular}{p{0.33\textwidth}|p{0.33\textwidth}|p{0.33\textwidth}}
+    \begin{smcode}
+blink :: ChannelSource (Stored IBool)
+      -> Task ()
+blink chan = do
+  tx  <- withChannelEmitter chan
+  res <- taskLocal
+  onPeriod period $ \textbackslash{}now -> do
+    res <- call blinkFromTime now
+    emit_ tx res
+  where period = Milliseconds 100
+    \end{smcode}
+&
+    \begin{smcode}
+blinkApp :: Tower ()
+blinkApp = do
+  (tx,rx) <- channel
+  task "blink" (blink tx)
+  task "lightswitch" $
+    onChannel rx $
+      \textbackslash{}lit -> do
+        ifte_ lit (turnOn light)
+                  (turnOff light)
+    \end{smcode}
+&
+    \raisebox{-\height}{\includegraphics[width=5.5cm]{figures/tower-example}}
+  \end{tabular}
+  \caption{Task (Column. 1), Tower (Col. 2), Graphviz output (Col. 3)}
+  \label{fig:tower-ex}
+\end{figure*}
 
 In many embedded systems, programmers produce an entire system of software
 that interacts with multiple input and output peripherals concurrently using a
@@ -73,68 +104,32 @@ and a total of about 3000 lines of Haskell code.
 \paragraph{Tower example}
 \label{sec:examples}
 
-
-\begin{figure*}[h!t]
-  \begin{tabular}{p{0.30\textwidth}|p{0.30\textwidth}|p{0.36\textwidth}}
-    \begin{smcode}
-blink :: ChannelSource (Stored IBool)
-      -> Task ()
-blink chan = do
-  tx  <- withChannelEmitter chan
-  res <- taskLocal
-  onPeriod period $ \textbackslash{}now -> do
-    call_ (func period) res now
-    emit_ tx res
-  where period = 100 :: Integer
-    \end{smcode}
-&
-    \begin{smcode}
-blinkApp :: Tower ()
-blinkApp = do
-  (tx,rx) <- channel
-  task "blink" (blink tx)
-  task "lightswitch" $
-    onChannel rx $
-      \textbackslash{}lit -> do
-        ifte_ lit (turnOn light)
-                  (turnOff light)
-    \end{smcode}
-&
-    \raisebox{-\height}{\includegraphics[width=5.5cm]{figures/tower-example}}
-  \end{tabular}
-  \caption{Task (Column. 1), Tower (Col. 2), Graphviz output (Col. 3)}
-  \label{fig:tower-ex}
-\end{figure*}
-
 In Figure~\ref{fig:tower-ex}, we sketch a small Tower example that is
-representative of a device driver that blinks an LED at the rate of 100 ticks
-(the duration of a tick is dependent on the RTOS backend to Tower used.)  Small
-simplifications to Tower have been made in the code, eliding details relating to
-code generation and backend selection.
+representative of a device driver that blinks an LED.  Small simplifications to
+Tower have been made in the code, eliding details relating to code generation
+and backend selection.
 
-Consider the first column of Figure~\ref{fig:tower-ex}.  The function takes an
-integer and returns an Ivory procedure, which compiles to a C function.  The
-procedure takes two arguments, a reference to a Boolean and a unsigned 32-bit
-value.  The procedure creates a local variable named \cd{even},
-assigning to it the value of an arithmetic expression.  The expression
-takes a current time, which is a multiple of the period, and returns whether the
-current time divided by the period is even or odd.  (Operators have a preceding
-\cd{.} or a following \cd{?} for Boolean operators to avoid name-space collision
-with Haskell operators.)  The result of the expression is stored into the
-\cd{res} reference.
+Consider the first column of Figure~\ref{fig:tower-ex}. The \cd{blink} task is
+defined to take a channel source and returns a program in the \cd{Task} monad.
+The task first initializes an emitter for the channel then creates a reference
+to private but globally-allocated memory.  Every 100 milliseconds, an Ivory
+action is taken.  In this case, the action is to call an Ivory function that
+returns a boolean given the current time. The boolean value \cd{res} is then
+emitted on the channel.
 
-The \cd{blink} task is defined in column two.  It takes a channel source and
-returns a program in the \cd{Task} monad.  The task first
-initializes an emitter for the channel then creates a reference to private but
-globally-allocated memory.  Every 100 ticks, an Ivory action is taken.  In this
-case, the action is to call an Ivory function, the one described in the
-previous section, that toggles that value pointed to by \cd{res}.  This value
-pointed to by \cd{res} is then emitted on the channel.
-
-In the third column the program, defined in the \cd{Tower} monad, initializes a
+In the second column the program, defined in the \cd{Tower} monad, initializes a
 channel between two tasks as well as the tasks themselves.  A channel, or queue,
 consists of transmit (\cd{tx}) and receive (\cd{rx}) endpoints, respectively.
 The \cd{blink} task is an RTOS task that will send output to the
 \cd{lightswitch} task, which toggles the LED based on the incoming Boolean
 values.
+
+In the third column, a graph of the tower program is shown, generated from the
+Tower compiler's Graphviz dot output. The \cd{blink} task is has fields for
+properties and communications ports, showing its periodic rate and emitter. The
+\cd{lightswitch} task only has one port, the event handler created by the
+\cd{onChannel} primitive. A channel, annotated with its Ivory datatype
+\cd{IBool}, is shown as a directed graph edge connecting from \cd{blink}'s
+emitter to \cd{lightswitch}'s event handler.
+
 
