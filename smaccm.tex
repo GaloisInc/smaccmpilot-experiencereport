@@ -34,8 +34,8 @@ The flight control software is primarily responsible for reading the sensors,
 estimating the vehicle's attitude and position using sensor fusion, calculating
 control outputs, and sending motor power commands to the motor controllers.
 Higher level controllers manage navigation, and an encrypted command, control,
-and telemetry link interprets ground station instructions, sends system state to
-the operator, and permits online tuning of controller parameters.
+and telemetry link interprets ground station instructions and sends system state
+to the operator.
 
 The result is a reasonably complex piece of embedded software. SMACCMPilot has
 30 tasks connected by 47 channels, and 57 globally shared state variables. Most
