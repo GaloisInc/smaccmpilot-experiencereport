@@ -60,17 +60,16 @@ implement the operating system (4kloc) and other functions, such as sensor
 fusion.  This compares favorably to existing open source flight controller
 systems.
 
-As an example, we haveve selected two other systems which have a similar feature
-set and run on similar hardware to SMACCMPilot --- the ArduPilot
-project~\cite{apm-proj} and the PX4 project. Though, in
-both cases, these systems have more high level functionality than SMACCMPilot,
-they both implement all of the low level features to support similar (or
-identical) microcontroller based flight controller boards, comparable low level
-control laws, and implement the same MAVLink telemetry protocol.
+We can compare this to two systems which have a similar feature set and run on
+similar hardware to SMACCMPilot.  The ArduPilot project~\cite{apm-proj} and the
+PX4 project are popular open source autopilots, both of which have more high
+level navagation and autonomy capabilities than SMACCMPilot.  Both implement all
+of the low level drivers to support similar (or identical) microcontroller based
+flight controller boards, comparable control laws, and implement the same
+MAVLink telemetry protocol.
 
-The ArduPilot project is 60kloc of C++, uses three pseudo-threads (emulated by
-interrupts on processors unsuitable for operating systems), and supports at
-least four distinct autopilot hardware platforms. The PX4 Autopilot software
-stack has 25kloc of C/C++ application code, 25kloc of C/C++ platform support
-code, and depends on the large (50kloc+) NuttX operating system.
+The ArduPilot project is over 60kloc of C++, runs in three pseudo-threads, and
+supports at least four distinct autopilot hardware platforms. The PX4 Autopilot
+software stack has 25kloc of C/C++ application code, 25kloc of C/C++ platform
+support code, and depends on the large (50kloc+) NuttX operating system.
 

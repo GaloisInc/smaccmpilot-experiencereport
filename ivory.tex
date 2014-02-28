@@ -106,19 +106,19 @@ domain-specific type-checker \emph{in} Haskell (relying on Haskell's type-system
 just for macro-language type-checking), or (2) embed the domain-specific type
 checker into Haskell's type system.
 
-For a large system such as SMACCMPilot, the development times are substantial.
-Therefore, our goal is to learn about program errors early, motivating us to
-pursue option (2), to detect errors during type-checking, which is fast and
-modular, rather than after Haskell compilation, when executing the EDSL programs
-to generate C code.  (We discuss the issues of finding errors early on in more
-detail in Section~\ref{sec:thegood}.)
+We were motivated to pursue option (2) because it allows us to discover problems
+sooner in the development cycle. In the case of option (1), we only find out
+about problems in the program's AST during code generation. Option (2) ensures
+that all macro and library code are typed correctly, independent of their use in
+the generated code. We discuss the issues of finding errors early on in more
+detail in Section~\ref{sec:thegood}.
 
-Our hypothesis when developing Ivory was that recent type-system extensions to
-the version of Haskell implemented by the Glasgow Haskell Compiler make it
-feasible to embed the invariants necessary to ensure memory-safe C programming
-into the type system~\cite{dephaskell}.  From a practical standpoint, doing so
-demonstrates just how far the type-system has come, allowing us to replicate the
-type safety of compilers like Cyclone, etc.
+When we began developing Ivory, our hypothesis  was that recent type-system
+extensions to the Glasgow Haskell Compiler make it feasible to embed the
+invariants necessary to ensure memory-safe C programming into the
+type-system~\cite{dephaskell}. From a practical standpoint, Ivory demonstrates
+just how far the type-system has come, allowing us to replicate the type safety
+of compilers like Cyclone, etc.
 
 We do not have space to adequately describe Ivory's type system; we leave that
 to a forthcoming paper.  Here we will note that the embedding depends on the use
