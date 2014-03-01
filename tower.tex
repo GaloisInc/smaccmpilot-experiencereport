@@ -126,8 +126,8 @@ the definition of \cd{blinkTask}, defined in the \cd{Task} monad.  The
 task first initializes an \emph{emitter} for the channel then creates a
 reference to allocated memory that is private to the task.  Every 100
 milliseconds, an Ivory action is taken.  In this case, the action is to call
-Ivory function \cd{blinkfromTime} that is executed whenever the task is enabled
-(we elide the implementation of \cd{blinkfromTime} in this example).  The
+Ivory function \cd{blinkFromTime} that is executed whenever the task is enabled
+(we elide the implementation of \cd{blinkFromTime} in this example).  The
 boolean value \cd{res} is then emitted on the channel.
 
 

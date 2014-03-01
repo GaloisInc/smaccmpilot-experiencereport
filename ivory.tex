@@ -16,15 +16,16 @@ The language we developed for generating safe embedded C code is called
 \emph{Ivory}.  Ivory compiles to restricted C code suitable for embedded
 programming.  Ivory shares the goal of other ``safe-C'' standalone languages and
 compilers like Cyclone~\cite{cyclone} and Rust~\cite{rust}.  Our main motivation
-for not using these languages is our desire for a convenient, Turing-complete,
+for not using those languages is our desire for a convenient, Turing-complete,
 type-safe macro-language (Haskell) to improve our productivity.
 
 There have also been some ``safe-C'' EDSLs including Atom~\cite{atom},
 Copilot~\cite{copilot}, and FeldSpar~\cite{feldspar1}.  The most significant
 difference between these languages and Ivory is that they are focused on pure
-computations and do not provide convenient support for defining in-memory
-data-structures and manipulating memory.  Ivory is designed to be a
-EDSL that can be used for writing safe memory-manipulating embedded C.
+computations (e.g., FeldSpar is a DSL for digital signal processing), and do not
+provide convenient support for defining in-memory data-structures and
+manipulating memory.  Ivory is designed to be a EDSL that can be used for
+writing safe memory-manipulating embedded C.
 
 Ivory also makes  contributions from a programming language
 perspective, namely in its expressiveness and type-safety.  We overview each,
@@ -115,7 +116,7 @@ checker into Haskell's type system.
 We were motivated to pursue option (2) because it allows us to discover problems
 sooner in the development cycle. In the case of option (1), we only find out
 about problems in the program's AST during code generation. Option (2) ensures
-that all macro and library code are typed correctly, independent of their use in
+that all macro and library code is typed correctly, independent of its use in
 the generated code. We discuss the issues of finding errors early on in more
 detail in Section~\ref{sec:thegood}.
 
