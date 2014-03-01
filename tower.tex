@@ -1,25 +1,13 @@
 \section{Tower: from Functions to Architectures}
 \label{sec:tower}
 
-\begin{figure*}[h!t]
-  \begin{tabular}{p{0.33\textwidth}|p{0.33\textwidth}|p{0.33\textwidth}}
+\begin{figure*}[hbt!]
+  \begin{tabular}{p{0.27\textwidth}|p{0.33\textwidth}|p{0.4\textwidth}}
     \begin{smcode}
-blink :: ChannelSource (Stored IBool)
-      -> Task ()
-blink chan = do
-  tx  <- withChannelEmitter chan
-  res <- taskLocal
-  onPeriod period $ \textbackslash{}now -> do
-    res <- call blinkFromTime now
-    emit_ tx res
-  where period = Milliseconds 100
-    \end{smcode}
-&
-    \begin{smcode}
-blinkApp :: Tower ()
-blinkApp = do
+blinkTower :: Tower ()
+blinkTower = do
   (tx,rx) <- channel
-  task "blink" (blink tx)
+  task "blink" (blinkTask tx)
   task "lightswitch" $
     onChannel rx $
       \textbackslash{}lit -> do
@@ -27,12 +15,24 @@ blinkApp = do
                   (turnOff light)
     \end{smcode}
 &
-    \raisebox{-\height}{\includegraphics[width=5.5cm]{figures/tower-example}}
+    \begin{smcode}
+blinkTask :: ChannelSource (Stored IBool)
+      -> Task ()
+blinkTask chan = do
+  tx  <- withChannelEmitter chan
+  res <- taskLocal
+  onPeriod period $ \textbackslash{}now -> do
+    res <- call blinkFromTime now
+    emit_ tx res
+  where period = Milliseconds 100
+    \end{smcode}  %%$
+&
+    \raisebox{-\height}{\includegraphics[width=6.5cm]{figures/tower-example}}
   \end{tabular}
-  \caption{Task (Column. 1), Tower (Col. 2), Graphviz output (Col. 3)}
+  \caption{Tower (Col. 2), Task (Column. 1), Graphviz output (Col. 3)}
   \label{fig:tower-ex}
 \end{figure*}
-%%$
+
 
 In many embedded systems, programmers produce an entire system of software
 that interacts with multiple input and output peripherals concurrently using a
@@ -110,27 +110,32 @@ representative of a device driver that blinks an LED.  Small simplifications to
 Tower have been made in the code, eliding details relating to code generation
 and backend selection.
 
-Consider the first column of Figure~\ref{fig:tower-ex}. The \cd{blink} task is
-defined to take a channel source and returns a program in the \cd{Task} monad.
-The task first initializes an emitter for the channel then creates a reference
-to private but globally-allocated memory.  Every 100 milliseconds, an Ivory
-action is taken.  In this case, the action is to call an Ivory function that
-returns a boolean given the current time. The boolean value \cd{res} is then
-emitted on the channel.
-
-In the second column the program, defined in the \cd{Tower} monad, initializes a
-channel between two tasks as well as the tasks themselves.  A channel, or queue,
+In the first column of the figure, the communication
+architecture is defined in the \cd{Tower} monad.  The program initializes a
+unidirectional channel between two tasks as well as the tasks themselves.  A channel, or queue,
 consists of transmit (\cd{tx}) and receive (\cd{rx}) endpoints, respectively.
-The \cd{blink} task is an RTOS task that will send output to the
-\cd{lightswitch} task, which toggles the LED based on the incoming Boolean
-values.
+The \cd{blinkTask} task is an RTOS task that will send output to the
+\cd{lightswitch} RTOS task via an RTOS-mediated channel.  The \cd{lightswitch}
+task toggles the LED based on the incoming Boolean values.  (In the third column, a graph of the tower program is shown, generated from the
+Tower compiler's Graphviz dot output, showing the architectural structure of the
+two tasks as well as the queue between them.)
 
-In the third column, a graph of the tower program is shown, generated from the
-Tower compiler's Graphviz dot output. The \cd{blink} task is has fields for
-properties and communications ports, showing its periodic rate and emitter. The
-\cd{lightswitch} task only has one port, the event handler created by the
-\cd{onChannel} primitive. A channel, annotated with its Ivory datatype
-\cd{IBool}, is shown as a directed graph edge connecting from \cd{blink}'s
-emitter to \cd{lightswitch}'s event handler.
+To conserve space, we only define \cd{blinkTask}.  The second column contains
+the definition of \cd{blinkTask}, defined in the \cd{Task} monad.  The
+\cd{blinkTask} task takes a channel source and returns a task.  The
+task first initializes an \emph{emitter} for the channel then creates a
+reference to allocated memory that is private to the task.  Every 100
+milliseconds, an Ivory action is taken.  In this case, the action is to call
+Ivory function \cd{blinkfromTime} that is executed whenever the task is enabled
+(we elide the implementation of \cd{blinkfromTime} in this example).  The
+boolean value \cd{res} is then emitted on the channel.
+
+
+%% . The \cd{blinkTask} task is has fields for
+%% properties and communications ports, showing its periodic rate and emitter. The
+%% \cd{lightswitch} task only has one port, the event handler created by the
+%% \cd{onChannel} primitive. A channel, annotated with its Ivory datatype
+%% \cd{IBool}, is shown as a directed graph edge connecting from \cd{blinkTask}'s
+%% emitter to \cd{lightswitch}'s event handler.
 
 

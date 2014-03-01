@@ -14,13 +14,12 @@ hardware components are black boxes.}
 \label{fig:smaccmpilotSwArch}
 \end{figure}
 
-Our goal was to build a robust autopilot. The result is
-SMACCMPilot, an open-source (BSD licensed) autopilot system for quadcopter
-unmanned air vehicles (UAVs).
-It is complete embedded system implemented with
-the Ivory/Tower tools.
-It includes low-level IO peripheral drivers, an encrypted
-communication protocol stack, and several layers of control systems.
+Our main use for Ivory and Tower thus far has been in building a robust
+autopilot. The result is SMACCMPilot, an open-source (BSD licensed) autopilot
+system for quadcopter unmanned air vehicles (UAVs).  It is complete embedded
+system that includes low-level IO
+peripheral drivers, an encrypted communication protocol stack, and several
+layers of control systems.
 
 SMACCMPilot runs on open source flight controller hardware from the PX4
 Autopilot project~\cite{px4-proj}. The hardware platform is
@@ -51,14 +50,13 @@ the ArduPilot open source project, the biggest of which is a 10kloc C++ library
 for inertial sensor fusion, are still used inside SMACCMPilot.
 
 \paragraph{Complexity comparison}
-The SMACCMPilot application code is 10kloc of Ivory, the board support code
-is 3kloc of Ivory, and the telemetry link binary packing and unpacking
-code is a machine generated 10kloc of Ivory code. When compiled, the complete
-application
-is 48kloc of generated C~code, and depends on some external C libraries to
-implement the operating system (4kloc) and other functions, such as sensor
-fusion.  This compares favorably to existing open source flight controller
-systems.
+The SMACCMPilot application code is 10kloc of Ivory, the board support code is
+3kloc of Ivory (and Tower), and the telemetry link binary packing and unpacking
+code is a machine generated 10kloc of Ivory code. When compiled, the
+complete application is 48kloc of generated C~code, and depends on some external
+C libraries to implement the operating system (4kloc) and other functions, such
+as sensor fusion.  This compares favorably to existing open source flight
+controller systems.
 
 We can compare this to two systems which have a similar feature set and run on
 similar hardware to SMACCMPilot.  The ArduPilot project~\cite{apm-proj} and the

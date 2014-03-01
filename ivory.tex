@@ -8,18 +8,16 @@ ground up.
 
 Of course, developing an EDSL is not the same as developing a stand-alone
 compiler.  Much of the typical compiler tool-chain, such as the front-end
-parser/lexer, is provided for free by the host language.  Furthermore, effort
-to develop the EDSL compiler was low because Haskell is a great language for
-building compilers, and has a rich set of existing libraries
-%% (e.g., \cd{language-c-quote}~\cite{mainland-cquote})
-which we built on top of. It took approximately 6 engineer-months to create the
-Ivory language and compiler, which totals about 6k lines of Haskell code.
+parser/lexer, is provided for free by the host language.  It took approximately
+6 engineer-months to create the Ivory language and compiler, which totals about
+6k lines of Haskell code.
 
 The language we developed for generating safe embedded C code is called
-\emph{Ivory}.  Ivory shares the goal of other ``safe-C'' standalone languages
-and compilers like Cyclone~\cite{cyclone} and Rust~\cite{rust}.  Our main
-motivation for not using these languages is our desire for a convenient,
-Turing-complete, type-safe macro-language (Haskell) to improve our productivity.
+\emph{Ivory}.  Ivory compiles to restricted C code suitable for embedded
+programming.  Ivory shares the goal of other ``safe-C'' standalone languages and
+compilers like Cyclone~\cite{cyclone} and Rust~\cite{rust}.  Our main motivation
+for not using these languages is our desire for a convenient, Turing-complete,
+type-safe macro-language (Haskell) to improve our productivity.
 
 There have also been some ``safe-C'' EDSLs including Atom~\cite{atom},
 Copilot~\cite{copilot}, and FeldSpar~\cite{feldspar1}.  The most significant
@@ -28,7 +26,7 @@ computations and do not provide convenient support for defining in-memory
 data-structures and manipulating memory.  Ivory is designed to be a
 EDSL that can be used for writing safe memory-manipulating embedded C.
 
-Ivory also makes interesting contributions from a programming language
+Ivory also makes  contributions from a programming language
 perspective, namely in its expressiveness and type-safety.  We overview each,
 then present a small example, to give the reader a feel for the language.
 
@@ -45,14 +43,14 @@ Regarding the expressiveness, Ivory has a variety of useful features, including:
     registers~\cite{high-level}.
 \end{itemize}
 
-We built Ivory with some limitations in order to  ensure safe C programs are
-generated.  Ivory does not support heap-based dynamic memory allocation (but
-global variables can be defined).  C arrays are fixed-length.  There is no
-pointer arithmetic.  Pointers are non-nullable.  Union types are not supported.
-Unsafe casts are not supported: casts must be to a strictly more expressive type
-(e.g., from an unsigned 8-bit integer to an unsigned 16-bit integer) or a
-default value must be provided for when the cast is not valid. The most common
-unsafe C cast is not possible: no void-pointer type exists in Ivory.
+We built Ivory with some limitations to simplify generating safe C programs.
+Ivory does not support heap-based dynamic memory allocation (but global
+variables can be defined).  C arrays are fixed-length.  There is no pointer
+arithmetic.  Pointers are non-nullable.  Union types are not supported.  Unsafe
+casts are not supported: casts must be to a strictly more expressive type (e.g.,
+from an unsigned 8-bit integer to an unsigned 16-bit integer) or a default value
+must be provided for when the cast is not valid. The most common unsafe C cast
+is not possible: no void-pointer type exists in Ivory.
 
 In Ivory, these have not been limiting factors, particularly because of the
 power of using Haskell as a macro system.  For example, while arrays must be of
@@ -83,8 +81,9 @@ behaviors more easily.
 %%     return a pointer to memory allocated within its own stack frame.
 %% \end{itemize}
 
-In addition, Ivory programs have an \emph{effects} type associated with them.
-There are three kinds of effects tracked:
+In addition, Ivory programs have an \emph{effects} type associated with them,
+implemented as a parameter to the Ivory monad.  There are three kinds of effects
+tracked:
 \begin{itemize}
   \item \emph{Allocation effects}: whether a program performs (stack-based)
     memory allocation as well as whether pointers point into global or stack memory.
@@ -93,12 +92,12 @@ There are three kinds of effects tracked:
     statement.
 \end{itemize}
 \noindent
-Tracking allocation effects allows memory allocation to be restricted and
-tracked.  For example, from a program's type alone, we can determine whether it
-allocates memory on the stack, making stack usage easier to track.  More
-importantly for memory-safety, allocation effects also ensure Ivory contains no
-dangling pointers: it is a type error to return a pointer to locally-allocated
-memory.
+Allocation effects allow memory allocation to be restricted and tracked at the
+type level.  For example, from a program's type alone, we can determine whether
+it allocates memory on the stack, making stack usage easier to track.  More
+importantly for memory-safety, allocation effects also ensure Ivory programs
+contain no dangling pointers: it is a type error to return a pointer to
+locally-allocated memory.
 
 Return and break statements fundamentally affect control-flow and can result in
 unexpected behavior by breaking out of the current block or returning from a
@@ -135,8 +134,7 @@ polymorphism~\cite{stmonad}.
 
 \paragraph{Ivory example}
 We present a small example of Ivory code.  The example omits many features of
-the language, but should give the reader a sense of its syntax.  We particularly
-focus on explaining the typing in the example.
+the language, but should give the reader a feeling for it.
 
 \begin{figure}
     \begin{smcode}
@@ -227,7 +225,7 @@ function applied in this case is a \cd{store} operation that takes a reference
 to a memory area, a value, and stores the value in the area.  It is a type-error
 if the value's type and memory-area's type do not match.
 
-The operation (\cd{ref \mytilde> baz}) takes the reference to a struct and
+The operation (\cd{ref \mytilde> baz}) takes the struct reference and
 returns a reference to the \cd{baz} field.  The bang (\cd{!}) operator takes a
 reference to an array, an index, and returns a reference to the value at that
 index.  The safety of indexing is maintained since the operator has the type
@@ -445,3 +443,4 @@ model-checking the generated C.
 %%   \item Static analysis
 %%   \item Execution
 %% \end{compactenum}
+
