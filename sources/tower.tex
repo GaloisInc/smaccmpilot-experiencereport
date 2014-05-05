@@ -59,22 +59,20 @@ would generate it for us.
 Our key insight was that such an EDSL could be built as a macro over Ivory,
 using Ivory's code-generation facilities, without losing anything.
 
-From these ideas, the Tower EDSL was born. You can think of Tower as an
-extension to the Ivory language, designed to deal with the specific concerns of
-multithreaded software architecture. Tower still allows the programmer to use
-all the low-level power of Ivory for general programming, but uses a separate
-language for describing tasks and the connections between them.  This is one of
-the great productivity features of working with EDSLs: if you discover the
-language you are using is difficult, tricky, or unsafe for solving a particular
-problem, you can easily extend that language with a library without modifying
-the compiler.
+From these ideas, the Tower EDSL was born. Tower is an extension to the Ivory
+language that is designed to deal with the specific concerns of multithreaded
+software architectures. Tower still allows the programmer to use all the
+low-level power of Ivory for general programming, but uses a separate language
+for describing tasks and the connections between them.  This is one of the great
+productivity features of working with EDSLs: if you discover the language you
+are using is difficult, tricky, or unsafe for solving a particular problem, you
+can easily extend that language with a library without modifying the compiler.
 
 In Tower, one specifies tasks and communication channels, and the Tower compiler
-generates correct
-Ivory implementations, as well as architecture description artifacts. Tower
-hides the dangerous low-level scheduling primitives from the user, and keeps
-type information for channels (i.e., the datatype of the channel message),
-expressed as Ivory types, in the Haskell type system.
+generate correct Ivory implementations, as well as architecture description
+artifacts. Tower hides the dangerous low-level scheduling primitives from the
+user, and keeps type information for channels (i.e., the datatype of the channel
+message), expressed as Ivory types, in the Haskell type system.
 
 Tower allows the programmer to describe a static graph of channels and tasks.
 For the intended use case in high assurance systems, a static configuration of
