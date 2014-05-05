@@ -1,0 +1,101 @@
+
+----------------------- REVIEW 1 ---------------------
+PAPER: 35
+TITLE: Building Embedded Systems with Embedded DSLs
+AUTHORS: Patrick Hickey, Lee Pike, Trevor Elliott, James Bielman and John Launchbury
+
+
+----------- REVIEW -----------
+This is a great ICFP experience report that:
+- motivates an important topic on how to safely program embedded systems 
+- describes a system they built using the Ivory EDSL and its application a quadcopter control platform
+- recounts a series of lessons learnt from the experience
+- includes the full source code under a liberal open source license.
+
+My only real complaint was that the paper drops hints about an intriguing effect system for tracking C memory management without giving any more details, leaving me hungry for the future full paper!
+
+The final discussion about staying within semantically valid C could use a little more work.  It may be worth citing "Towards optimization-safe systems: analyzing the impact of undefined behavior" from SOSP 13 as a motivation for how dangerously sneaky undefined behaviour can lead to real holes.  
+
+The other thing conspicuously missing is a discussion of the relation to the emerging formally proven systems.  The paper mentions model checking, but nothing of proofs. Have the authors considered using CompCert as a target to compile their generated C (assuming that they can guarantee semantically defined C is generated, as discussed in the final section).  In general, does the EDSL approach (and the leveraging of the Haskell type system) make future integration with formal verification tools easier or harder?
+
+typos:
+- "smal" -> "small" in "Control your compiler"
+
+
+----------------------- REVIEW 2 ---------------------
+PAPER: 35
+TITLE: Building Embedded Systems with Embedded DSLs
+AUTHORS: Patrick Hickey, Lee Pike, Trevor Elliott, James Bielman and John Launchbury
+
+
+----------- REVIEW -----------
+The authors report on their experiences building an embedded domain specific language for an autonomous autopilot using Haskell. The EDSL generates C code targeted towards a family of programmable autopilot hardware.
+They argue that they were successful in designing two new languages and compilers during the project duration, resulting in higher productivity and increased safety of the generated software.
+The languages and compiler were designed alongside the actual autopilot application (SMACCMPilot).
+Both languages (Ivory and Tower) as well as the autopilot application (SAMCCMPilot) are available as open source (BSD3) on github.
+
+The paper targets two audiences, researchers developing new EDSLs for low-level programming as well as practitioners using EDSLs for low-level programming. I consider myself as belonging to both these groups.
+
+With my EDSL developer hat on I find that they give good descriptions of their languages as well as motivation for design decisions, many of which can be reused in the design of other similar languages.
+However, I would find it interesting to know wether the use of advanced and fairly recent additions to the Haskell type system affects the type error messages seen by the language end user.
+
+With my practitioner hat on the paper gives me confidence and evidence that it is possible to create a substantial piece of embedded real-time software using functional programming methods.
+
+
+I think the paper is very readable, both for researchers and for practitioners, with valuable lessons for both target groups.
+The paper shows how the use of functional programming can be a productivity and quality enhancing method for development of embedded real-time software. Two major contributors to this are type-safety and domain specific constructs to eliminate whole classes of bugs.
+
+I strongly recommend that the paper is accepted.
+
+Further comments:
+I believe that the paper would benefit from being more precise about the high assurance aspects of the project. For example, it says "We believe Ivory cannot produce memory-unsafe C programs." I would have liked to see further discussion of this. Why do the authors believe this? How will this eventually be checked (if at all)?
+In similar vein, on the last page of the paper there are some vague comments about the use of model checking: "We have used model-checking in a limited fashion, but naively applied; it does not scale to the size of SMACCMPilot." I realise that space is tight, but this is just tantalising. A little more discussion of this first attempt and of future plans for the use of model checking would surely strengthen the paper, given that it stresses safety as well as productivity gains.
+
+I note that the Ivory and Tower languages, with documentation, tutorials etc. as well as the autopilot example are available on the web page given on p. 1 (smaccmpilot.org). This increases the value of the paper.
+
+
+Minor comments:
+- FeldSpar -> Feldspar
+- In section "Ivory example": generated Ivory code generated -> Ivory code generated
+- In section "Everything is a library": smal -> small
+- p.3 the Tower compiler generate -> .. generates ...
+- p. 4 It is complete embedded system -> It is a complete embedded system
+- On p. 4 it is mentioned that some components in SMACCMPilot are still in the original C++. Is there any interesting reason for this?
+- p. 4 I strongly object to the use of "dog-fooding" as a verb
+- p. 5 indicies -> indices
+- p. 5 "whether resulting in the compiler or not"   doesn't seem to say exactly what the authors intended?
+- p. 6 promote them ints -> promote them to ints
+- p. 6 bugs result from our misunderstanding -> bugs that result from our misunderstanding
+
+
+----------------------- REVIEW 3 ---------------------
+PAPER: 35
+TITLE: Building Embedded Systems with Embedded DSLs
+AUTHORS: Patrick Hickey, Lee Pike, Trevor Elliott, James Bielman and John Launchbury
+
+
+----------- REVIEW -----------
+Summary:
+The paper presents the Ivory and Tower (cleverly named) DSLs embedded in Haskell, and describes their use in building an embedded autopilot system.
+
+Ivory generates safe embedded C code using the Haskell typechecker to guarantee some memory saftey properties of the generated code. It is implied that this uses extensions to GHC supporting dependent typing. Behaviors identified by the type system include stack allocation, handling of pointers, and control flow like returns and breaks.
+
+Tower is a macro library built on top of Ivory for describing tasks and their communication on a multithreaded system. It generates glue code that calls operating system interfaces and manages the communication between tasks.
+
+The authors include some lessons learned: 
+- Strong type checking for embedded programming is useful due to testing turnaround time
+- Using Haskell as a high level macro language minimizes low level code and leads to a more modular system.
+- A module system (like the one they built) that lets devs forget to package / include needed definitions in a build leads to problems.
+- EDSLs are really easy to extend, as everything is a library.
+- Undefined behaviors in C require the insertion of runtime checks to guarantee safety
+
+
+Review:
+The general purpose of Ivory and Tower is clearly articulated and the examples are helpful in explaining their use. By the comparisons they offer to other systems, it would appear that the EDSLs were indeed effective in allowing the authors to write embedded software that is somewhat safer and in fewer lines of code.
+
+The lessons learned section seems to rehash some of the same points offered in an earlier discussion of EDSL typesystems for embedded programming by one of the same authors (on Copilot). It might benefit from a more focused discussion of the aspects that are novel in this system.
+
+Some discussion of the host language and the features therein that enabled this work would also be helpful. What were the new features that allow the typechecker to be fully embedded in the haskell typechecker, and is there anything particularly interesting about that embedding? Were there any aspects of the host language that limited the power of the EDSLs or made their implementation unnecessarily challenging? Sharing those aspects of the experience might help guide the development of general purpose language features to better support EDSLs.
+
+Finally, are there any drawbacks to this approach that should be noted? How does the dangling pointer protection compare to Rust's borrow checking? Are the error messages produced by the type system informative? It seems like embedding in haskell's type system would eventually be limiting, and that might merit discussion.
+
