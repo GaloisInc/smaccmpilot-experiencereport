@@ -54,7 +54,7 @@ static warnings reported by GHC, are nearly instantaneous
 since it can be done on a module-by-module basis.  The upshot is that Ivory
 programs that would generate unsafe C programs are caught immediately.
 The type system tracks the global or stack frame provenance of
-references, as well as structure accessors and array indicies, to ensure
+references, as well as structure accessors and array indices, to ensure
 all well-typed Ivory programs generate memory-safe C.
 
 In addition, we have found it useful to detect potential bugs even if the C
@@ -124,7 +124,7 @@ implementing the compiler, it is easy to write new passes or inspect passes for
 errors.  Rebuilding the compiler takes seconds.
 
 More generally, we have a different mindset programming in an EDSL: if a class
-of bug occurs a few times---whether resulting in the compiler or not---we change
+of bug occurs a few times---whether caused in the compiler or not---we change
 the language/compiler to eliminate it (or at least to automatically insert
 assertions to check for it).  Instead of a growing test-suite, we
 have a growing set of checks in the compiler, to help eliminate both our bugs
@@ -168,7 +168,7 @@ ifte_ (x >? 100)
 With an EDSL, and particularly a Turing-complete macro language, everything is a
 library.  The distinction between language developers and users becomes
 ambiguous.  As an extreme example, one can think of Tower as ``just'' a library
-for Ivory.  A smal example is defining a conditional operator in terms of
+for Ivory.  A small example is defining a conditional operator in terms of
 Ivory's if-then-else primitive as shown in Figure~\ref{fig:ivory-cond}.  All
 types above were introduced in Section~\ref{sec:ivory}.  With the \cd{cond\_}
 operator, we can replace nested if-then-else statements as shown in the figure
@@ -220,7 +220,7 @@ assumptions.
 
 Finally, even defined behavior is not necessarily intuitive behavior.  For
 example, in C, the defined behavior for arithmetic on values that have a
-size-type smaller than \cd{int} is to implicitly promote them \cd{int}s before
+size-type smaller than \cd{int} is to implicitly promote them to \cd{int}s before
 performing the arithmetic.
 
 For example, given
