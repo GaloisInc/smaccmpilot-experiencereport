@@ -6,7 +6,7 @@ Repository of LaTeX sources, figures, and pdf copies of our paper,
 
 by Pat Hickey, Lee Pike, Trevor Elliott, James Bielman, John Launchbury
 
-Submitted to ICFP'14.
+Accepted at ICFP'14.
 
 See [http://smaccmpilot.org][] for more info.
 
