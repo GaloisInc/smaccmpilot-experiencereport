@@ -64,6 +64,19 @@ compilation phase, we discover these warnings nearly instantaneously during type
 checking.  Moreover, the more preprocessing we can do in Haskell, the more
 potential errors we may find, and with a better relation to the source.
 
+%% please check wording and facts in the following paragraph: (pat)
+
+While we made great use of Haskell's type system, it is not possible to embed
+every domain-specific property we can imagine in the Haskell type system. Our
+memory model is limited by the expressiveness of Haskell types. By example, the
+Rust language~\cite{rust} uses linear types to enforce memory safety of heap
+references. This scheme could not be embedded into the Haskell type system.
+
+More generally, Haskell type error reporting can be unwieldy. Ivory users
+would benefit from domain-specific error reporting which could, for example,
+describe type errors in the vocabulary of Ivory, rather than burden the user to
+interpret the way the Ivory language types are embedded into Haskell types.
+
 \paragraph{Type-safe system plumbing}
 The most tedious part of adding many new features to SMACCMPilot is the business
 logic in Tower: defining a new task, and then plumbing all the communication
@@ -98,6 +111,9 @@ source or header file.  On the other hand, we have found it to be verbose,
 tedious, and error-prone.  Generally, we want the C files to have similar
 structure to the Haskell modules in which Ivory programs are written.  From that
 respect, the Ivory module system simply duplicates the Haskell module system.
+We found that needing to manage the module system by hand, rather than
+automatically in the compiler, was the biggest drawback to embedding Ivory in
+Haskell.
 
 Worse, moreover, is when the programmer forgets to package a definition.  The
 error only becomes apparent at C \emph{link} time, near the end of a long build
