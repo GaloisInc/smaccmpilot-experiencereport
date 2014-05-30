@@ -47,7 +47,8 @@ system were written first in C, then transliterated to Ivory as the language
 became mature enough to support them. We built a stack for command, control, and
 telemetry, encapsulated in an encrypted packet protocol. A few components from
 the ArduPilot open source project, the biggest of which is a 10kloc C++ library
-for inertial sensor fusion, are still used inside SMACCMPilot.
+for inertial sensor fusion, are still used inside SMACCMPilot. We plan to
+replace the remaining C++ code with an Ivory implementation in the future.
 
 \paragraph{Complexity comparison}
 The SMACCMPilot application code is 10kloc of Ivory, the board support code is
@@ -64,7 +65,8 @@ PX4 project are popular open source autopilots, both of which have more high
 level navagation and autonomy capabilities than SMACCMPilot.  Both implement all
 of the low level drivers to support similar (or identical) microcontroller based
 flight controller boards, comparable control laws, and implement the same
-MAVLink telemetry protocol.
+MAVLink telemetry protocol. We do note that the APM and PX4 projects have more
+high level autonomous capabilities than SMACCMPilot has at this time.
 
 The ArduPilot project is over 60kloc of C++, runs in three pseudo-threads, and
 supports at least four distinct autopilot hardware platforms. The PX4 Autopilot
