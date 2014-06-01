@@ -134,19 +134,6 @@ to a forthcoming paper.  Here we will note that the embedding depends on the use
 of data kinds~\cite{datakinds}, type families~\cite{typefamilies}, and rank-2
 polymorphism~\cite{stmonad}.
 
-\paragraph{Compiler assurance}
-
-We claim that Ivory code compiles to memory-safe C code, and does not permit
-undefined behaviors. However, we do not have a formal proof of these claims, or
-a proof that the semantics of Ivory programs are implemented by the generated C
-code. We rely on experts to inspect the compiler for correctness, which is made
-feasable by a small set of language primitives, simple memory model, and a small
-core compiler. In all, this is a much lower level of assurance than is given by
-fully verified toolchains, such as CompCert~\cite{TODO-COMPCERT}. The primary
-contribution of our earlier work on the Copilot EDSL~\cite{copilot} shows
-methods to increase the assurance of EDSL compilers. We could implement many of
-these techniques to improve the Ivory compiler, but have not at this time.
-
 \paragraph{Ivory example}
 We present a small example of Ivory code.  The example omits many features of
 the language, but should give the reader a feeling for it.

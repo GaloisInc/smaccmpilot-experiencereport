@@ -198,6 +198,17 @@ standard library, to be shared.
 %% \lp{not sure if this is that interesting}
 %% We wrote a constant folder for Ivory as a ``nice to have'' feature.  
 
+\paragraph{Compiler assurance}
+
+We claim that Ivory code compiles to memory-safe C code.  However, a formal
+proof of these claims, or more generally, a proof that the semantics of Ivory
+programs are implemented by the generated C code, is work-in-progress.  However,
+a small number of primitives and simple compiler facilitates compiler inspection
+and testing. In all, this is less assurance than is given by fully verified
+toolchains, such as CompCert~\cite{compcert}.  Other approaches more specific to
+brining assurance to EDSL compilers~\cite{pike-icfp-12} could be borrowed as
+well.
+
 \paragraph{Semantics}
 To take advantage of legacy cross-compilers, we are forced to
 generate C code from our EDSL.  A large focus in designing Ivory is to allow
