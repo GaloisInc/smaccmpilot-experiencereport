@@ -64,18 +64,20 @@ compilation phase, we discover these warnings nearly instantaneously during type
 checking.  Moreover, the more preprocessing we can do in Haskell, the more
 potential errors we may find, and with a better relation to the source.
 
-%% please check wording and facts in the following paragraph: (pat)
+Not every property of interest in embedded programming can be conveniently
+embedded in the Haskell type system, with GHC extensions.  For example, integer
+overflows checks are not practical to embed.
 
-While we made great use of Haskell's type system, it is not possible to embed
-every domain-specific property we can imagine in the Haskell type system. Our
-memory model is limited by the expressiveness of Haskell types. By example, the
-Rust language~\cite{rust} uses linear types to enforce memory safety of heap
-references. This scheme could not be embedded into the Haskell type system.
-
-More generally, Haskell type error reporting can be unwieldy. Ivory users
-would benefit from domain-specific error reporting which could, for example,
-describe type errors in the vocabulary of Ivory, rather than burden the user to
-interpret the way the Ivory language types are embedded into Haskell types.
+Moreover, GHC's type error reporting can be unwieldy. Ivory users would benefit
+from domain-specific error reporting which could, for example, describe type
+errors in the vocabulary of Ivory, rather than burden the user to interpret the
+way the Ivory language types are embedded into Haskell types.  For example,
+passing the wrong number of arguments to a an Ivory function in a procedure call
+is reported as a type error when using functional dependencies, and a mismatch
+between the type of a procedure and the number of arguments provided in its
+declaration is reported as a kind error.  The errors reported are of the
+particular type-level implementation given for Ivory types.  Haskell does not
+have good facilities for type-level programming abstraction.
 
 \paragraph{Type-safe system plumbing}
 The most tedious part of adding many new features to SMACCMPilot is the business
