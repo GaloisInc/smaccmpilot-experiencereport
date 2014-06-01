@@ -1,14 +1,20 @@
 
+[Lee]
 The final discussion about staying within semantically valid C could use a little more work.  It may be worth citing "Towards optimization-safe systems: analyzing the impact of undefined behavior" from SOSP 13 as a motivation for how dangerously sneaky undefined behaviour can lead to real holes.  
 
 The other thing conspicuously missing is a discussion of the relation to the emerging formally proven systems.  The paper mentions model checking, but nothing of proofs. Have the authors considered using CompCert as a target to compile their generated C (assuming that they can guarantee semantically defined C is generated, as discussed in the final section).  In general, does the EDSL approach (and the leveraging of the Haskell type system) make future integration with formal verification tools easier or harder?
 
 
-I believe that the paper would benefit from being more precise about the high assurance aspects of the project. For example, it says "We believe Ivory cannot produce memory-unsafe C programs." I would have liked to see further discussion of this. Why do the authors believe this? How will this eventually be checked (if at all)?
+I believe that the paper would benefit from being more precise about the high
+assurance aspects of the project. For example, it says "We believe Ivory cannot
+produce memory-unsafe C programs." I would have liked to see further discussion
+of this. Why do the authors believe this? How will this eventually be checked
+(if at all)?
+
+[Lee]
 In similar vein, on the last page of the paper there are some vague comments about the use of model checking: "We have used model-checking in a limited fashion, but naively applied; it does not scale to the size of SMACCMPilot." I realise that space is tight, but this is just tantalising. A little more discussion of this first attempt and of future plans for the use of model checking would surely strengthen the paper, given that it stresses safety as well as productivity gains.
 
 - On p. 4 it is mentioned that some components in SMACCMPilot are still in the original C++. Is there any interesting reason for this?
-- p. 4 I strongly object to the use of "dog-fooding" as a verb
 
 The lessons learned section seems to rehash some of the same points offered in an earlier discussion of EDSL typesystems for embedded programming by one of the same authors (on Copilot). It might benefit from a more focused discussion of the aspects that are novel in this system.
 
