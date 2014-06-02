@@ -227,12 +227,11 @@ defines the behavior of the program if a check fails.  For example, during
 testing, we define the checks to insert a breakpoint for use with a debugger.
 Another option may be to do nothing and rely on the semantics provided by the C
 compiler.  Still another option might be to trap to a user-defined
-exception-handler.
-
-Currently, SMACCMPilot contains approximately 2500 compiler-inserted non-trivial
-checks that cannot be constant-folded away.  In the future, we hope to
-\emph{prove} these checks never fail.  We have used model-checking in a limited
-fashion, but naively applied; it does not scale to the size of SMACCMPilot.
+exception-handler.  Currently, SMACCMPilot contains approximately 2500
+compiler-inserted non-trivial checks that cannot be constant-folded away.  %% In
+the future, we hope to
+%% \emph{prove} these checks never fail.  We have used model-checking in a limited
+%% fashion, but naively applied; it does not scale to the size of SMACCMPilot.
 
 There are two other semantics categories to consider: defined behavior and
 implementation-defined behavior.  In Ivory, we attempt to eliminate almost all
