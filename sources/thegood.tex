@@ -228,10 +228,17 @@ testing, we define the checks to insert a breakpoint for use with a debugger.
 Another option may be to do nothing and rely on the semantics provided by the C
 compiler.  Still another option might be to trap to a user-defined
 exception-handler.  Currently, SMACCMPilot contains approximately 2500
-compiler-inserted non-trivial checks that cannot be constant-folded away.  %% In
-the future, we hope to
-%% \emph{prove} these checks never fail.  We have used model-checking in a limited
-%% fashion, but naively applied; it does not scale to the size of SMACCMPilot.
+compiler-inserted non-trivial checks that cannot be constant-folded away.
+In the future, we hope to \emph{prove} these checks never fail.
+
+Early in the
+development process, we used the CBMC model checker~\cite{cmbc} to partially
+verify the assertions in the generated C~code. However, as our
+application grew, we ran into three problems. First, a naive application
+of whole program model checking did not scale to our application size. Second,
+many assertions depend on user-provided preconditions (e.g. on inputs from
+hardware devices). Third, some assertions were undecidable (e.g. non-linear
+arithmetic).
 
 There are two other semantics categories to consider: defined behavior and
 implementation-defined behavior.  In Ivory, we attempt to eliminate almost all
