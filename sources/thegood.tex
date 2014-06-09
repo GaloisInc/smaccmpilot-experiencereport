@@ -7,7 +7,7 @@ us, despite our teams' previous experience in functional programming and
 embedded development.
 
 Our experience using Ivory and Tower to build SMACCMPilot has been an extreme
-lesson in ``eating our own dog-food'' EDSLs.  We had multiple developers writing the compilers
+lesson in ``eating our own dog-food''.  We had multiple developers writing the compilers
 and using them to build applications concurrently.  We learned a few lessons
 that are relevant to any compiler development but particularly relevant to EDSL
 development.
@@ -51,20 +51,20 @@ is for embedded programming.  As described in Section~\ref{sec:ivory}, we
 have embedded Ivory's type system in Haskell's.  Thus, domain-specific
 type-errors are caught during Haskell type-checking.  Type-checking, and other
 static warnings reported by GHC, are nearly instantaneous
-since it can be done on a module-by-module basis.  The upshot is that Ivory
-programs that would generate unsafe C programs are caught immediately.
+since it can be done on a module-by-module basis.
 The type system tracks the global or stack frame provenance of
 references, as well as structure accessors and array indices, to ensure
-all well-typed Ivory programs generate memory-safe C.
+all well-typed Ivory programs generate memory-safe C.  The upshot is that Ivory
+programs that would generate unsafe C programs are caught immediately.
 
 In addition, we have found it useful to detect potential bugs even if the C
 compiler might also detect them.  To take one example, consider unused variable
 declarations.  While a C compiler can detect this, perhaps late in the
 compilation phase, we discover these warnings nearly instantaneously during type
 checking.  Moreover, the more preprocessing we can do in Haskell, the more
-potential errors we may find, and with a better relation to the source.
+potential errors we may find, and with a better relation to the EDSL source.
 
-Not every property of interest in embedded programming can be conveniently
+However, not every property of interest in embedded programming can be conveniently
 embedded in the Haskell type system, with GHC extensions.  For example, integer
 overflows checks are not practical to embed.
 
@@ -77,7 +77,7 @@ is reported as a type error when using functional dependencies, and a mismatch
 between the type of a procedure and the number of arguments provided in its
 declaration is reported as a kind error.  The errors reported are of the
 particular type-level implementation given for Ivory types.  Haskell does not
-have good facilities for type-level programming abstraction.
+yet have good facilities for type-level programming abstraction.
 
 \paragraph{Type-safe system plumbing}
 The most tedious part of adding many new features to SMACCMPilot is the business
@@ -113,11 +113,8 @@ source or header file.  On the other hand, we have found it to be verbose,
 tedious, and error-prone.  Generally, we want the C files to have similar
 structure to the Haskell modules in which Ivory programs are written.  From that
 respect, the Ivory module system simply duplicates the Haskell module system.
-We found that needing to manage the module system by hand, rather than
-automatically in the compiler, was the biggest drawback to embedding Ivory in
-Haskell.
 
-Worse, moreover, is when the programmer forgets to package a definition.  The
+Worse is when the programmer forgets to package a definition.  The
 error only becomes apparent at C \emph{link} time, near the end of a long build
 process.  Missing definitions have plagued our builds.
 
@@ -147,6 +144,15 @@ the language/compiler to eliminate it (or at least to automatically insert
 assertions to check for it).  Instead of a growing test-suite, we
 have a growing set of checks in the compiler, to help eliminate both our bugs
 and the bugs in \emph{all} future Ivory programs.
+
+We claim that Ivory code compiles to memory-safe C code.  However, a formal
+proof of these claims, or more generally, a proof that the semantics of Ivory
+programs are implemented by the generated C code, is work-in-progress.  However,
+a small number of primitives and simple compiler facilitates inspection
+and testing. In all, this is less assurance than is given by fully verified
+toolchains, such as CompCert~\cite{compcert}.  Other approaches more specific to
+brining assurance to EDSL compilers could be borrowed as
+well~\cite{pike-icfp-12}.
 
 \paragraph{Everything is a library}
 
@@ -200,16 +206,6 @@ standard library, to be shared.
 %% \lp{not sure if this is that interesting}
 %% We wrote a constant folder for Ivory as a ``nice to have'' feature.  
 
-\paragraph{Compiler assurance}
-
-We claim that Ivory code compiles to memory-safe C code.  However, a formal
-proof of these claims, or more generally, a proof that the semantics of Ivory
-programs are implemented by the generated C code, is work-in-progress.  However,
-a small number of primitives and simple compiler facilitates compiler inspection
-and testing. In all, this is less assurance than is given by fully verified
-toolchains, such as CompCert~\cite{compcert}.  Other approaches more specific to
-brining assurance to EDSL compilers~\cite{pike-icfp-12} could be borrowed as
-well.
 
 \paragraph{Semantics}
 To take advantage of legacy cross-compilers, we are forced to

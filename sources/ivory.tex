@@ -9,15 +9,15 @@ ground up.
 Of course, developing an EDSL is not the same as developing a stand-alone
 compiler.  Much of the typical compiler tool-chain, such as the front-end
 parser/lexer, is provided for free by the host language.  It took approximately
-6 engineer-months to create the Ivory language and compiler, which totals about
+6 engineer-months to create the language and compiler, which totals about
 6k lines of Haskell code.
 
 The language we developed for generating safe embedded C code is called
 \emph{Ivory}.  Ivory compiles to restricted C code suitable for embedded
-programming.  Ivory shares the goal of other ``safe-C'' standalone languages and
-compilers like Cyclone~\cite{cyclone} and Rust~\cite{rust}.  Our main motivation
-for not using those languages is our desire for a convenient, Turing-complete,
-type-safe macro-language (Haskell) to improve our productivity.
+programming.  Ivory shares the goal of other ``safe-C'' languages and compilers
+like Cyclone~\cite{cyclone} and Rust~\cite{rust}.  Our main motivation for not
+using those languages is our desire for an EDSL providing convenient,
+Turing-complete, type-safe macro-language (Haskell) to improve our productivity.
 
 There have also been some ``safe-C'' EDSLs including Atom~\cite{atom},
 Copilot~\cite{copilot}, and Feldspar~\cite{feldspar1}.  The most significant
