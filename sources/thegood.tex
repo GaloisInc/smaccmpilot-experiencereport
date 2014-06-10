@@ -81,18 +81,20 @@ yet have good facilities for type-level programming abstraction.
 
 \paragraph{Type-safe system plumbing}
 Adding many new features to SMACCMPilot is easy. In fact, the most tedious part
-is the business logic in Tower: defining a new task, and then plumbing all the
-communication channels through the code.  There is nothing conceptually
-difficult in doing so.  It simply requires modifying the arguments to a Haskell
-function that generates a Tower task (or modifying the fields of a data-type if
-channels have been grouped together).  Channels are typed, so type-checking
-detects most plausible inter-task communication errors.
+is writing the business logic in Tower, where we define a new task, and then
+plumb values representing communication channels through the code.  There is
+nothing conceptually difficult in doing so---it is similar to any monadic
+interface for specifying a graph. When changes cross Haskell function
+boundaries, we must modify the arguments to the Haskell function that generates
+the Tower task (or modifying the fields of a data-type if channels have been
+grouped together).  Channels are typed, so type-checking detects most plausible
+inter-task communication errors.
 
 Stepping back, the idea that plumbing arguments to Haskell functions is the
 hardest part of embedded development is amazing.  We are not dealing with bugs
-in low-level OS interfaces, we are not making timing errors in communication, we
-are not dealing with type-errors like you might find in raw C (where data might
-be cast to \cd{void*} or \cd{char[]}).
+in low-level OS interfaces, we are not making timing or resource contention
+errors in communication, we are not dealing with type-errors like you might find
+in raw C (where data might be cast to \cd{void*} or \cd{char[]}).
 
 Because plumbing is so easy, it encourages us to improve modularity in the
 system.  Defining a new RTOS task is easy, so we might as well modularize
@@ -151,7 +153,7 @@ programs are implemented by the generated C code, is work-in-progress.  However,
 a small number of primitives and simple compiler facilitates inspection
 and testing. In all, this is less assurance than is given by fully verified
 toolchains, such as CompCert~\cite{compcert}.  Other approaches more specific to
-brining assurance to EDSL compilers could be borrowed as
+bringing assurance to EDSL compilers could be borrowed as
 well~\cite{pike-icfp-12}.
 
 \paragraph{Everything is a library}
