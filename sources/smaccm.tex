@@ -53,16 +53,15 @@ replace the remaining C++ code with Ivory implementations in the future.
 \paragraph{Complexity comparison}
 The SMACCMPilot application code is 10kloc of Ivory, the board support code is
 3kloc of Ivory (and Tower), and the telemetry link binary packing and unpacking
-code is a machine generated 10kloc of Ivory code. When compiled, the
+code is a machine-generated 10kloc of Ivory code. When compiled, the
 complete application is 48kloc of generated C~code, and depends on some external
 C libraries to implement the operating system (4kloc) and other functions, such
-as sensor fusion.  This compares favorably to existing open source flight
+as sensor fusion.  This is comparable to existing open source flight
 controller systems.
 
 We can compare this to two systems which have a similar feature set and run on
 similar hardware to SMACCMPilot.  The ArduPilot project~\cite{apm-proj} and the
-PX4 project are popular open source autopilots, both of which have more high
-level navagation and autonomy capabilities than SMACCMPilot.  Both implement all
+PX4 project are popular open source autopilots. Both implement all
 of the low level drivers to support similar (or identical) microcontroller based
 flight controller boards, comparable control laws, and implement the same
 MAVLink telemetry protocol. We do note that the APM and PX4 projects have more

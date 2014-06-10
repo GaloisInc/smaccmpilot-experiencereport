@@ -65,28 +65,28 @@ checking.  Moreover, the more preprocessing we can do in Haskell, the more
 potential errors we may find, and with a better relation to the EDSL source.
 
 However, not every property of interest in embedded programming can be conveniently
-embedded in the Haskell type system, with GHC extensions.  For example, integer
+embedded in the Haskell type system with GHC extensions.  For example, integer
 overflows checks are not practical to embed.
 
 Moreover, GHC's type error reporting can be unwieldy. Ivory users would benefit
 from domain-specific error reporting which could, for example, describe type
 errors in the vocabulary of Ivory, rather than burden the user to interpret the
 way the Ivory language types are embedded into Haskell types.  For example,
-passing the wrong number of arguments to a an Ivory function in a procedure call
-is reported as a type error when using functional dependencies, and a mismatch
+passing the wrong number of arguments to an Ivory function in a procedure call
+is reported as a type error when using functional dependencies, whereas a mismatch
 between the type of a procedure and the number of arguments provided in its
 declaration is reported as a kind error.  The errors reported are of the
 particular type-level implementation given for Ivory types.  Haskell does not
 yet have good facilities for type-level programming abstraction.
 
 \paragraph{Type-safe system plumbing}
-The most tedious part of adding many new features to SMACCMPilot is the business
-logic in Tower: defining a new task, and then plumbing all the communication
-channels through the code.  There is nothing conceptually difficult in doing so.
-It simply requires modifying the arguments to a Haskell function that generates
-a Tower task (or modifying the fields of a data-type if channels have been
-grouped together).  Channels are typed, so type-checking detects most plausible
-inter-task communication errors.
+Adding many new features to SMACCMPilot is easy. In fact, the most tedious part
+is the business logic in Tower: defining a new task, and then plumbing all the
+communication channels through the code.  There is nothing conceptually
+difficult in doing so.  It simply requires modifying the arguments to a Haskell
+function that generates a Tower task (or modifying the fields of a data-type if
+channels have been grouped together).  Channels are typed, so type-checking
+detects most plausible inter-task communication errors.
 
 Stepping back, the idea that plumbing arguments to Haskell functions is the
 hardest part of embedded development is amazing.  We are not dealing with bugs
@@ -199,7 +199,7 @@ operator, we can replace nested if-then-else statements as shown in the figure
 with more convenient conditionals, without modifying the language.
 
 Because macros are so easy to define and natural in EDSL development, our
-biggest challenge is ensuring developers on our team put useful ones in a
+biggest challenge has been ensuring developers on our team put useful ones in a
 standard library, to be shared.
 
 %% \paragraph{Simplification is necessary}
@@ -246,7 +246,7 @@ hold in a non-standard architecture (e.g., that an \cd{int} is at least 32 bits
 or that \cd{char} is unsigned; both are implementation-defined).  Such
 assumptions are particularly dangerous when porting code between different
 embedded platforms.  Indeed, when we ported portions of ArduPilot, initially built
-for an 8-bit AVR architecture to a 32-bit ARM, we found these sort of implicit
+for an 8-bit AVR architecture to a 32-bit ARM, we found these sorts of implicit
 assumptions.
 
 Finally, even defined behavior is not necessarily intuitive behavior.  For
@@ -267,7 +267,7 @@ bool    y = (uint8\_t)(a-b) > 0;
 sizeof(uint8\_t) < sizeof(int)
 \end{code}
 \noindent
-This behavior is important to the embedded programmer because, across various
+This behavior is worrisome to the embedded programmer because, across various
 embedded processors and C compilers, integer sizes are often defined
 differently.
 

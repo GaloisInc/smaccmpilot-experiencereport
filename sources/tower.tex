@@ -43,8 +43,8 @@ RTOS kernel cannot protect any system memory against badly behaved user code.
 These restrictions put significant burden on programmers: they must ensure all
 tasks, and all communication between tasks, are implemented correctly.
 
-During our initial development of SMACCMPilot, we found ourselves writing
-high-quality C functions in Ivory, which guarantees memory-safety of the
+During our initial development of SMACCMPilot, we found ourselves generating
+high-quality C functions from Ivory, which guarantees memory-safety of the
 generated code. But whenever we needed
 ``glue code'' to implement inter-process communication, initialize
 data-structures, read the system clock, lock the processor, etc., we were forced
