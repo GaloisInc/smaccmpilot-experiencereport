@@ -649,7 +649,8 @@
     not made or distributed for profit or commercial advantage and that copies
     bear this notice and the full citation on the first page. Copyrights for
     third-party components of this work must be honored. 
-    For all other uses, contact the owner/author(s).}%
+    For all other uses, contact the owner/author(s). Copyright is held by the
+    author/owner(s).}%
   \toappear{%
     \noindent \@permission \par
     \vspace{2pt}
