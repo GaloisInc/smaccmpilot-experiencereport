@@ -14,7 +14,7 @@ $(TGT).pdf: $(WORK_DIR) *.tex
 	bibtex $(WORK_DIR)/$(TGT).aux
 	$(latex) $(TGT)
 	bibtex $(WORK_DIR)/$(TGT).aux
-	echo "\balance" >> $(WORK_DIR)/$(TGT).bbl
+	# echo "\balance" >> $(WORK_DIR)/$(TGT).bbl
 	$(latex) $(TGT)
 	cp $(WORK_DIR)/$(TGT).pdf .
 	cp $(WORK_DIR)/$(TGT).pdf icfp35ep-hickey.pdf
