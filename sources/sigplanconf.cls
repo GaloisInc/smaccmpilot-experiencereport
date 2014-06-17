@@ -655,7 +655,6 @@
     \noindent \@permission \par
     \vspace{2pt}
     \noindent \textsl{\@conferencename}, \quad \@conferenceinfo. \par
-    \noindent Copyright is held by the owner/author(s). \par
     \noindent ACM \@copyrightdata.\par
     \noindent http://dx.doi.org/10.1145/\@doi}}
 
