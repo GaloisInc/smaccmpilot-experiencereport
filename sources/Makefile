@@ -17,10 +17,10 @@ $(TGT).pdf: $(WORK_DIR) *.tex
 	# echo "\balance" >> $(WORK_DIR)/$(TGT).bbl
 	$(latex) $(TGT)
 	cp $(WORK_DIR)/$(TGT).pdf .
-	cp $(WORK_DIR)/$(TGT).pdf icfp35ep-hickey.pdf
-	pdf2ps icfp35ep-hickey.pdf
-	-rm icfp35ep-hickey.zip
-	zip -r icfp35ep-hickey.zip *.tex *.cls *.bib figures Makefile
+	# cp $(WORK_DIR)/$(TGT).pdf icfp35ep-hickey.pdf
+	# pdf2ps icfp35ep-hickey.pdf
+	# -rm icfp35ep-hickey.zip
+	# zip -r icfp35ep-hickey.zip *.tex *.cls *.bib figures Makefile
 
 $(TGT).dvi: $(WORK_DIR) $(TGT).tex
 	$(tex) $(TGT)
